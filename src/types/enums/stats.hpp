@@ -18,21 +18,18 @@ enum class BaseStat {
 constexpr uint8_t NUM_BASE_STATS = static_cast<uint8_t>(BaseStat::COUNT);
 
 struct EvSpread {
-    bool hp     : 1;
-    bool atk    : 1;
-    bool def    : 1;
-    bool sp_atk : 1;
-    bool sp_def : 1;
-    bool spd    : 1;
-    bool : 2;  // padding
+    uint8_t bits{0};
 
-    constexpr EvSpread(uint8_t bits = 0)
-        : hp(bits & 0x01)
-        , atk(bits & 0x02)
-        , def(bits & 0x04)
-        , sp_atk(bits & 0x08)
-        , sp_def(bits & 0x10)
-        , spd(bits & 0x20) {}
+    constexpr EvSpread(uint8_t b = 0) : bits(b) {}
+
+    static constexpr uint8_t mask(BaseStat s) { return 1u << static_cast<uint8_t>(s); }
+
+    constexpr bool hp() const { return bits & mask(BaseStat::HP); }
+    constexpr bool atk() const { return bits & mask(BaseStat::ATK); }
+    constexpr bool def() const { return bits & mask(BaseStat::DEF); }
+    constexpr bool sp_atk() const { return bits & mask(BaseStat::SP_ATK); }
+    constexpr bool sp_def() const { return bits & mask(BaseStat::SP_DEF); }
+    constexpr bool spd() const { return bits & mask(BaseStat::SPD); }
 };
 
 }  // namespace types::enums

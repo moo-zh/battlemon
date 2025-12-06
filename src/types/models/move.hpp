@@ -14,24 +14,27 @@ struct Move {
     // ============================================================
 
     struct Flags {
-        bool makes_contact : 1;
-        bool protect_affected : 1;
-        bool magic_coat_affected : 1;
-        bool snatch_affected : 1;
-        bool mirror_move_affected : 1;
-        bool kings_rock_affected : 1;
-        bool reserved_1 : 1;
-        bool reserved_2 : 1;
+        uint8_t bits{0};
 
-        constexpr Flags(uint8_t bits = 0)
-            : makes_contact(bits & 0x01)
-            , protect_affected(bits & 0x02)
-            , magic_coat_affected(bits & 0x04)
-            , snatch_affected(bits & 0x08)
-            , mirror_move_affected(bits & 0x10)
-            , kings_rock_affected(bits & 0x20)
-            , reserved_1(bits & 0x40)
-            , reserved_2(bits & 0x80) {}
+        constexpr Flags(uint8_t b = 0) : bits(b) {}
+
+        enum Bit : uint8_t {
+            MAKES_CONTACT = 1 << 0,
+            PROTECT_AFFECTED = 1 << 1,
+            MAGIC_COAT_AFFECTED = 1 << 2,
+            SNATCH_AFFECTED = 1 << 3,
+            MIRROR_MOVE_AFFECTED = 1 << 4,
+            KINGS_ROCK_AFFECTED = 1 << 5,
+            RESERVED_1 = 1 << 6,
+            RESERVED_2 = 1 << 7
+        };
+
+        constexpr bool makes_contact() const { return bits & MAKES_CONTACT; }
+        constexpr bool protect_affected() const { return bits & PROTECT_AFFECTED; }
+        constexpr bool magic_coat_affected() const { return bits & MAGIC_COAT_AFFECTED; }
+        constexpr bool snatch_affected() const { return bits & SNATCH_AFFECTED; }
+        constexpr bool mirror_move_affected() const { return bits & MIRROR_MOVE_AFFECTED; }
+        constexpr bool kings_rock_affected() const { return bits & KINGS_ROCK_AFFECTED; }
     };
 
     // ============================================================
