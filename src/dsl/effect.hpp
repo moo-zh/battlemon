@@ -33,7 +33,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "../logic/commands/all.hpp"
+#include "../logic/ops/all.hpp"
 #include "../logic/state/context.hpp"
 #include "branching.hpp"
 #include "domain.hpp"
@@ -213,11 +213,11 @@ struct RepeatWhile {
         if (auto _dsl_prev = ::dsl::begin<domains>(ctx); true)
 /**
  * @def RUN(cmd)
- * @brief Executes a command (auto-prefixed with logic::commands::).
+ * @brief Executes a command (auto-prefixed with logic::ops::).
  * @param cmd Command name without namespace prefix.
  */
-#define RUN(cmd)                                                             \
-    if (auto _pipe = _dsl_prev.template run<::logic::commands::cmd>(); true) \
+#define RUN(cmd)                                                        \
+    if (auto _pipe = _dsl_prev.template run<::logic::ops::cmd>(); true) \
         if (auto _dsl_prev = _pipe; true)
 
 /**
@@ -226,8 +226,8 @@ struct RepeatWhile {
  * @param cmd Command name without namespace prefix.
  * @param ... Arguments to pass to the command.
  */
-#define RUN_WITH(cmd, ...)                                                              \
-    if (auto _pipe = _dsl_prev.template run<::logic::commands::cmd>(__VA_ARGS__); true) \
+#define RUN_WITH(cmd, ...)                                                         \
+    if (auto _pipe = _dsl_prev.template run<::logic::ops::cmd>(__VA_ARGS__); true) \
         if (auto _dsl_prev = _pipe; true)
 
 /**
