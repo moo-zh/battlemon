@@ -5,6 +5,7 @@
 #include "../enums/nature.hpp"
 #include "../enums/species.hpp"
 #include "../enums/stats.hpp"
+#include "stats.hpp"
 
 namespace types {
 
@@ -13,7 +14,8 @@ struct Rental {
     enums::Move moves[4];
     enums::Item held_item;
     enums::Nature nature;
-    enums::EvSpread ev_spread;
+
+    EvSpread ev_spread;
     uint8_t ability_slot;
 };
 

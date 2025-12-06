@@ -1,6 +1,6 @@
 ---
 # BattleMon - clang-format configuration
-# C++17 project using modern formatting conventions
+# C++20 project using modern formatting conventions
 
 BasedOnStyle: Google
 Language: Cpp
