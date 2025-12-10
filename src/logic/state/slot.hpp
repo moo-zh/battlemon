@@ -108,6 +108,7 @@ struct SlotState {
     // Per-turn state
     bool is_first_turn{true};
     bool moved_this_turn{false};
+    bool bounce_move{false};  // Magic Coat: reflect eligible status moves
 
     // Helpers
     constexpr bool has(uint32_t flag) const { return volatiles & flag; }
@@ -160,6 +161,7 @@ struct SlotState {
         physical_attacker = 0xFF;
         special_attacker = 0xFF;
         moved_this_turn = false;
+        bounce_move = false;
     }
 };
 

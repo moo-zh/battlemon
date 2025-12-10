@@ -169,4 +169,38 @@ using TryLowerDefenderAtk1 = TryModifyDefenderStat<Stat::ATK, -1>;
 using TryLowerDefenderDef1 = TryModifyDefenderStat<Stat::DEF, -1>;
 using TryLowerDefenderSpd1 = TryModifyDefenderStat<Stat::SPD, -1>;
 
+// ============================================================================
+//                          RESET ALL STATS (Haze)
+// ============================================================================
+//
+// Resets all stat stages for both attacker and defender to neutral (6).
+// In a full implementation, this would iterate over all battlers.
+//
+// Domain: Slot
+// Stage:  Genesis -> EffectApplied
+// ============================================================================
+
+struct ResetAllStats : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        // Reset attacker's stats
+        reset_slot(*ctx.attacker_slot);
+
+        // Reset defender's stats
+        reset_slot(*ctx.defender_slot);
+
+        // TODO: In doubles, iterate over all 4 slots
+    }
+
+   private:
+    static void reset_slot(logic::state::SlotState& slot) {
+        slot.atk_stage = 6;
+        slot.def_stage = 6;
+        slot.spd_stage = 6;
+        slot.sp_atk_stage = 6;
+        slot.sp_def_stage = 6;
+        slot.accuracy_stage = 6;
+        slot.evasion_stage = 6;
+    }
+};
+
 }  // namespace logic::ops

@@ -78,4 +78,106 @@ struct ApplyDamage : CommandMeta<Domain::Slot | Domain::Mon, DamageCalculated, D
     }
 };
 
+// ============================================================================
+//                             DRAIN HP (ABSORB)
+// ============================================================================
+//
+// Heals the attacker by a percentage of damage dealt. Typically 50% for
+// Absorb/Mega Drain/Giga Drain. Skips if the move missed, dealt 0 damage,
+// or a substitute absorbed all damage.
+//
+// Domain: Mon (writes attacker's HP)
+// Stage:  DamageApplied -> EffectApplied
+// ============================================================================
+
+template <uint8_t Percent>
+struct DrainHP : CommandMeta<Domain::Mon, DamageApplied, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        if (ctx.result.missed || ctx.result.damage == 0) {
+            return;
+        }
+
+        // If a substitute is still up, no HP is restored (Gen III behavior)
+        if (ctx.defender_has_substitute() &&
+            ctx.defender_slot && ctx.defender_slot->substitute_hp > 0) {
+            return;
+        }
+
+        uint32_t heal = static_cast<uint32_t>(ctx.result.damage) * Percent / 100u;
+        if (heal == 0 && ctx.result.damage > 0) {
+            heal = 1;  // minimum 1 HP if damage > 0
+        }
+        ctx.attacker_mon->heal(static_cast<uint16_t>(heal));
+    }
+};
+
+using DrainHalfHP = DrainHP<50>;
+
+// ============================================================================
+//                             RECOIL DAMAGE
+// ============================================================================
+//
+// Damages the attacker by a percentage of damage dealt. Skips if miss/zero.
+// Domain: Mon (attacker HP)
+// Stage:  DamageApplied -> EffectApplied
+// ============================================================================
+
+template <uint8_t Percent>
+struct Recoil : CommandMeta<Domain::Mon, DamageApplied, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        if (ctx.result.missed || ctx.result.damage == 0) {
+            return;
+        }
+        uint32_t recoil = static_cast<uint32_t>(ctx.result.damage) * Percent / 100u;
+        if (recoil == 0 && ctx.result.damage > 0) {
+            recoil = 1;  // minimum 1 if damage occurred
+        }
+        ctx.attacker_mon->apply_damage(static_cast<uint16_t>(recoil));
+    }
+};
+
+using RecoilQuarter = Recoil<25>;    // e.g., Take Down
+using RecoilThird   = Recoil<33>;    // e.g., Double-Edge (approx)
+
+// ============================================================================
+//                           FIXED DAMAGE SETTER
+// ============================================================================
+//
+// Sets ctx.result.damage to a fixed amount (after accuracy).
+// Domain: Slot | Mon (damage pipeline context)
+// Stage:  AccuracyResolved -> DamageCalculated
+// ============================================================================
+
+template <uint16_t Amount>
+struct SetFixedDamage : CommandMeta<Domain::Slot | Domain::Mon, AccuracyResolved, DamageCalculated> {
+    static void execute(dsl::BattleContext& ctx) {
+        if (ctx.result.missed) {
+            ctx.result.damage = 0;
+            return;
+        }
+        ctx.result.damage = Amount;
+    }
+};
+
+// ============================================================================
+//                            USER RECOVERY
+// ============================================================================
+//
+// Heals attacker by a percentage of max HP.
+// Domain: Mon
+// Stage:  Genesis -> EffectApplied
+// ============================================================================
+
+template <uint8_t Percent>
+struct HealUser : CommandMeta<Domain::Mon, Genesis, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        if (!ctx.attacker_mon) return;
+        uint32_t heal = static_cast<uint32_t>(ctx.attacker_mon->max_hp) * Percent / 100u;
+        if (heal == 0 && Percent > 0) heal = 1;
+        ctx.attacker_mon->heal(static_cast<uint16_t>(heal));
+    }
+};
+
+using HealHalf = HealUser<50>;
+
 }  // namespace logic::ops

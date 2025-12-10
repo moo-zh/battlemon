@@ -30,6 +30,84 @@
 
 \*                                                                                      */
 
+#include "logic/routines/all.hpp"
+#include "types/models/move.hpp"
+
+// Smoke test: instantiate and execute effects to verify wiring/compilation.
+namespace {
+
+template <typename Effect>
+void run_effect() {
+    using namespace logic;
+
+    dsl::BattleContext ctx{};
+    state::FieldState field{};
+    state::SideState side1{}, side2{};
+    state::SlotState slot1{}, slot2{};
+    state::MonState mon1{}, mon2{};
+    types::Move move{};
+
+    move.power = 40;
+    move.accuracy = 100;
+    move.flags = types::Move::Flags{types::Move::Flags::MAGIC_COAT_AFFECTED};
+    ctx.move = &move;
+
+    ctx.field = &field;
+    ctx.attacker_side = &side1;
+    ctx.defender_side = &side2;
+    ctx.attacker_slot = &slot1;
+    ctx.defender_slot = &slot2;
+    ctx.attacker_mon = &mon1;
+    ctx.defender_mon = &mon2;
+
+    // Set up slots array for all-battler iteration
+    ctx.slots[0] = &slot1;
+    ctx.slots[1] = &slot2;
+    ctx.mons[0] = &mon1;
+    ctx.mons[1] = &mon2;
+    ctx.active_slot_count = 2;
+
+    // Capture deltas for contract-style smoke; prevent unused warnings
+    uint16_t atk_hp_before = mon1.current_hp;
+    uint16_t def_hp_before = mon2.current_hp;
+
+    Effect::execute(ctx);
+
+    volatile int16_t atk_delta = static_cast<int16_t>(mon1.current_hp) - static_cast<int16_t>(atk_hp_before);
+    volatile int16_t def_delta = static_cast<int16_t>(mon2.current_hp) - static_cast<int16_t>(def_hp_before);
+    volatile bool status_applied = ctx.result.status_applied;
+    volatile bool failed = ctx.result.failed;
+    (void)atk_delta; (void)def_delta; (void)status_applied; (void)failed;
+}
+
+inline void smoke_test() {
+    using namespace logic::routines;
+
+    // Phase 1
+    run_effect<Hit>();
+    run_effect<AttackUp2>();
+    run_effect<AttackDown1>();
+    run_effect<PoisonHit>();
+    run_effect<Poison>();
+    run_effect<LightScreen>();
+    run_effect<Sandstorm>();
+
+    // Phase 2
+    run_effect<Absorb>();
+    run_effect<TakeDown>();
+    run_effect<DragonRage>();
+    run_effect<Recover>();
+    run_effect<Haze>();
+    run_effect<SkyAttack>();
+    run_effect<PerishSong>();
+    run_effect<BatonPass>();
+    run_effect<Pursuit>();
+    run_effect<MagicCoat>();
+}
+
+}  // namespace
+
 int main() {
+    smoke_test();
     return 0;
 }

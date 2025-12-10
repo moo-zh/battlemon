@@ -109,4 +109,133 @@ struct TryApplyStatusChance : CommandMeta<Domain::Mon, DamageApplied, EffectAppl
     static void execute(dsl::BattleContext& ctx) { TryApplyStatus<S>::execute(ctx, Chance); }
 };
 
+// ============================================================================
+//                         VOLATILE STATUS (Flinch)
+// ============================================================================
+//
+// Flinch is a per-turn volatile that prevents the target from moving.
+// Applied as a secondary effect after damage.
+//
+// Domain: Slot (writes volatile flags)
+// Stage:  DamageApplied -> EffectApplied
+// ============================================================================
+
+struct TryApplyFlinch : CommandMeta<Domain::Slot, DamageApplied, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        // Skip if missed
+        if (ctx.result.missed) {
+            return;
+        }
+
+        // Can only flinch if target hasn't moved yet this turn
+        if (ctx.defender_slot->moved_this_turn) {
+            return;
+        }
+
+        // TODO: Roll for chance (Sky Attack = 30%)
+        // For smoke testing, always apply
+        ctx.defender_slot->set(logic::state::volatile_flags::FLINCHED);
+    }
+};
+
+// ============================================================================
+//                         CHARGING MOVES
+// ============================================================================
+//
+// Two-turn moves like Sky Attack, Solar Beam, Fly, etc.
+// BeginCharge: Sets charging state, skips attack this turn
+// ClearCharge: Clears charging state after attack executes
+//
+// Domain: Slot (writes charging_move, volatile flags)
+// Stage:  Genesis -> FaintChecked (BeginCharge ends the effect early)
+//         Genesis -> AccuracyResolved (ClearCharge runs before accuracy)
+// ============================================================================
+
+struct BeginCharge : CommandMeta<Domain::Slot, Genesis, FaintChecked> {
+    static void execute(dsl::BattleContext& ctx) {
+        // Store the move being charged
+        // In a real impl, this would be the move ID from ctx.move
+        ctx.attacker_slot->charging_move = 1;  // Placeholder non-zero value
+        ctx.attacker_slot->set(logic::state::volatile_flags::CHARGING);
+
+        // For semi-invulnerable moves (Fly, Dig, Dive), also set SEMI_INVULN
+        // Sky Attack doesn't grant semi-invulnerability in Gen III
+    }
+};
+
+struct ClearCharge : CommandMeta<Domain::Slot, Genesis, AccuracyResolved> {
+    static void execute(dsl::BattleContext& ctx) {
+        ctx.attacker_slot->charging_move = 0;
+        ctx.attacker_slot->clear(logic::state::volatile_flags::CHARGING);
+    }
+};
+
+// ============================================================================
+//                           MAGIC COAT (BOUNCE)
+// ============================================================================
+//
+// Sets the per-turn "bounce" flag to reflect eligible status moves.
+// Actual interception is handled by the battle engine when selecting/using
+// a target: if defender->bounce_move and move.flags.magic_coat_affected(),
+// redirect the move back to the user and clear bounce_move.
+//
+// Domain: Slot (writes per-turn protection flag)
+// Stage:  Genesis -> EffectApplied
+// ============================================================================
+
+struct SetMagicCoat : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        if (ctx.attacker_slot) {
+            ctx.attacker_slot->bounce_move = true;
+        }
+    }
+};
+
+// ============================================================================
+//                         PERISH SONG
+// ============================================================================
+//
+// Applies Perish Song to ALL battlers in the field (including the user).
+// Each affected Pokemon faints after 3 turns unless they switch out.
+//
+// Gen III behavior:
+// - Affects all Pokemon on the field
+// - Pokemon already affected are not re-affected (counter doesn't reset)
+// - Soundproof blocks the effect
+//
+// Domain: Slot (writes volatile flags to all slots)
+// Stage:  Genesis -> EffectApplied
+// ============================================================================
+
+struct ApplyPerishSong : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
+    static void execute(dsl::BattleContext& ctx) {
+        bool any_affected = false;
+
+        for (uint8_t i = 0; i < ctx.active_slot_count; ++i) {
+            auto* slot = ctx.slots[i];
+            auto* mon = ctx.mons[i];
+
+            if (!slot || !mon) continue;
+
+            // Skip fainted Pokemon
+            if (mon->is_fainted()) continue;
+
+            // Skip if already affected by Perish Song
+            if (slot->has(logic::state::volatile_flags::PERISH_SONG)) continue;
+
+            // TODO: Check for Soundproof ability
+
+            // Apply Perish Song
+            slot->set(logic::state::volatile_flags::PERISH_SONG);
+            slot->perish_count = 3;
+            any_affected = true;
+        }
+
+        // Move fails if no one was affected (all already had it)
+        if (!any_affected) {
+            ctx.result.failed = true;
+        }
+    }
+};
+
 }  // namespace logic::ops

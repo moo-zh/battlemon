@@ -14,6 +14,7 @@
 #include "field.hpp"
 #include "stats.hpp"
 #include "status.hpp"
+#include "switch.hpp"
 
 namespace logic::ops {
 

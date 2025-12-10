@@ -38,6 +38,12 @@ struct EffectResult {
 
     // General failure flag (for guarded sequences)
     bool failed{false};
+
+    // Switch-related requests (handled by battle engine)
+    bool switch_out{false};
+    bool baton_pass{false};
+    bool pursuit_intercept{false};
+    uint8_t pursuit_user_slot{0xFF};
 };
 
 // Damage calculation overrides
@@ -46,6 +52,9 @@ struct DamageOverride {
     uint16_t attack{0};   // 0 = use attacker's stat
     uint16_t defense{0};  // 0 = use defender's stat
 };
+
+// Maximum slots in battle (2 for singles, 4 for doubles)
+inline constexpr uint8_t MAX_BATTLE_SLOTS = 2;
 
 struct BattleContext {
     // ========================================================================
@@ -60,8 +69,14 @@ struct BattleContext {
     logic::state::SideState* defender_side{nullptr};
 
     // Domain 3: Slots (per-position)
+    // Individual slot pointers (for current attacker/defender)
     logic::state::SlotState* attacker_slot{nullptr};
     logic::state::SlotState* defender_slot{nullptr};
+
+    // All slots array (for iteration - PerishSong, Haze in doubles, etc.)
+    logic::state::SlotState* slots[MAX_BATTLE_SLOTS]{nullptr, nullptr};
+    logic::state::MonState* mons[MAX_BATTLE_SLOTS]{nullptr, nullptr};
+    uint8_t active_slot_count{MAX_BATTLE_SLOTS};
 
     // Domain 4: Mons (per-pokemon)
     logic::state::MonState* attacker_mon{nullptr};
