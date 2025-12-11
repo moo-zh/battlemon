@@ -67,21 +67,17 @@ struct CalculateDamage
         if (is_physical) {
             params.attack = ctx.override.attack > 0 ? ctx.override.attack : attacker.attack;
             params.defense = ctx.override.defense > 0 ? ctx.override.defense : defender.defense;
-            params.attack_stage = ctx.attacker_slot
-                                      ? static_cast<uint8_t>(ctx.attacker_slot->atk_stage)
-                                      : calc::DEFAULT_STAT_STAGE;
-            params.defense_stage = ctx.defender_slot
-                                       ? static_cast<uint8_t>(ctx.defender_slot->def_stage)
-                                       : calc::DEFAULT_STAT_STAGE;
+            params.attack_stage =
+                ctx.attacker_slot ? ctx.attacker_slot->atk_stage : calc::DEFAULT_STAT_STAGE;
+            params.defense_stage =
+                ctx.defender_slot ? ctx.defender_slot->def_stage : calc::DEFAULT_STAT_STAGE;
         } else {
             params.attack = ctx.override.attack > 0 ? ctx.override.attack : attacker.sp_attack;
             params.defense = ctx.override.defense > 0 ? ctx.override.defense : defender.sp_defense;
-            params.attack_stage = ctx.attacker_slot
-                                      ? static_cast<uint8_t>(ctx.attacker_slot->sp_atk_stage)
-                                      : calc::DEFAULT_STAT_STAGE;
-            params.defense_stage = ctx.defender_slot
-                                       ? static_cast<uint8_t>(ctx.defender_slot->sp_def_stage)
-                                       : calc::DEFAULT_STAT_STAGE;
+            params.attack_stage =
+                ctx.attacker_slot ? ctx.attacker_slot->sp_atk_stage : calc::DEFAULT_STAT_STAGE;
+            params.defense_stage =
+                ctx.defender_slot ? ctx.defender_slot->sp_def_stage : calc::DEFAULT_STAT_STAGE;
         }
 
         // Types for STAB and effectiveness

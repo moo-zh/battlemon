@@ -27,9 +27,9 @@ using types::calc::StatValue;
 //
 // Then multiply by (in order):
 //   1. Critical hit (2x)
-//   2. Random factor (85-100%)
-//   3. STAB (1.5x if attacker shares type with move)
-//   4. Type effectiveness (0x, 0.25x, 0.5x, 1x, 2x, 4x)
+//   2. STAB (1.5x if attacker shares type with move)
+//   3. Type effectiveness (0x, 0.25x, 0.5x, 1x, 2x, 4x)
+//   4. Random factor (85-100%) - applied last per Gen III behavior
 //
 // Reference: pokeemerald/src/pokemon.c CalculateBaseDamage()
 //            pokeemerald/src/battle_script_commands.c Cmd_typecalc()
@@ -207,10 +207,13 @@ constexpr Damage clamp_damage(DamageCalc damage) {
  *   2. Apply stat stages (crit-aware)
  *   3. Calculate base damage
  *   4. Apply critical multiplier
- *   5. Apply random variance
- *   6. Apply STAB
- *   7. Apply type effectiveness
+ *   5. Apply STAB
+ *   6. Apply type effectiveness
+ *   7. Apply random variance (85-100%) - must be after type calc per Gen III
  *   8. Enforce minimum damage
+ *
+ * Reference: pokeemerald/data/battle_scripts_1.s order:
+ *   critcalc -> damagecalc -> typecalc (STAB + type eff) -> adjustnormaldamage (random)
  *
  * @param params All parameters needed for damage calculation
  *
@@ -225,13 +228,13 @@ inline DamageResult calculate_damage(const DamageParams& params) {
 
     DamageCalc damage = calc_base_damage(params.level, params.power, atk, def);
     damage = apply_critical_multiplier(damage, result.critical);
-    damage = apply_random_variance(damage, params.skip_random);
     damage = apply_stab(damage, params.move_type, params.attacker_type1, params.attacker_type2);
 
     result.effectiveness =
         get_type_effectiveness(params.move_type, params.defender_type1, params.defender_type2);
 
     damage = apply_type_effectiveness(damage, result.effectiveness);
+    damage = apply_random_variance(damage, params.skip_random);
     damage = enforce_minimum_damage(damage, result.effectiveness);
 
     result.damage = clamp_damage(damage);

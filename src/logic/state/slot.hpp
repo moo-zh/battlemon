@@ -60,14 +60,14 @@ constexpr uint32_t BATON_PASS_MASK = CONFUSED | FOCUS_ENERGY | SUBSTITUTE | LEEC
 }  // namespace volatile_flags
 
 struct SlotState {
-    // Stat stages (-6 to +6, stored as 0-12 with 6 = neutral)
-    int8_t atk_stage{6};
-    int8_t def_stage{6};
-    int8_t spd_stage{6};
-    int8_t sp_atk_stage{6};
-    int8_t sp_def_stage{6};
-    int8_t accuracy_stage{6};
-    int8_t evasion_stage{6};
+    // Stat stages (-6 to +6, with 0 = neutral)
+    int8_t atk_stage{0};
+    int8_t def_stage{0};
+    int8_t spd_stage{0};
+    int8_t sp_atk_stage{0};
+    int8_t sp_def_stage{0};
+    int8_t accuracy_stage{0};
+    int8_t evasion_stage{0};
 
     // Volatile status bitfield
     uint32_t volatiles{0};
@@ -113,9 +113,6 @@ struct SlotState {
     constexpr bool has(uint32_t flag) const { return volatiles & flag; }
     constexpr void set(uint32_t flag) { volatiles |= flag; }
     constexpr void clear(uint32_t flag) { volatiles &= ~flag; }
-
-    // Get effective stat stage (-6 to +6)
-    constexpr int8_t effective_stage(int8_t raw) const { return static_cast<int8_t>(raw - 6); }
 
     // Clear for switch-out (normal)
     constexpr void clear_on_switch() { *this = SlotState{}; }

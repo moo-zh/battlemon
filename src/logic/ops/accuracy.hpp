@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../calc/accuracy.hpp"
 #include "base.hpp"
 
 namespace logic::ops {
@@ -8,7 +9,7 @@ namespace logic::ops {
 //                            CHECK ACCURACY
 // ============================================================================
 //
-// Determines if the move hits or misses.
+// Determines if the move hits or misses using Gen III accuracy formula.
 //
 // Domain: Slot (reads accuracy/evasion stages)
 // Stage:  Genesis -> AccuracyResolved
@@ -16,22 +17,20 @@ namespace logic::ops {
 
 struct CheckAccuracy : CommandMeta<Domain::Slot, Genesis, AccuracyResolved> {
     static void execute(dsl::BattleContext& ctx) {
-        // TODO: Full accuracy formula
-        // For now, simple accuracy check
+        // Get stat stages (default to 0 if no slot context)
+        int8_t acc_stage = 0;
+        int8_t eva_stage = 0;
 
-        if (ctx.move->accuracy == 0) {
-            // Accuracy 0 means "always hits" (Swift, Aerial Ace, etc.)
-            ctx.result.missed = false;
-            return;
+        if (ctx.attacker_slot) {
+            acc_stage = ctx.attacker_slot->accuracy_stage;
+        }
+        if (ctx.defender_slot) {
+            eva_stage = ctx.defender_slot->evasion_stage;
         }
 
-        // Basic accuracy check (will be expanded with full formula)
-        // accuracy * (attacker_acc_stages / defender_eva_stages)
-        // For now, just use move accuracy directly
-
-        // Placeholder RNG - in real implementation, use proper RNG
-        // For smoke testing, moves always hit
-        ctx.result.missed = false;
+        // Check accuracy using calc module
+        bool hits = calc::check_accuracy(ctx.move->accuracy, acc_stage, eva_stage);
+        ctx.result.missed = !hits;
     }
 };
 

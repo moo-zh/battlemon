@@ -14,21 +14,28 @@ using types::calc::StatValue;
 //
 // Gen III stat stage modifier table.
 //
-// Stat stages range from -6 to +6, stored as 0-12 (with 6 being neutral).
+// Stat stages range from -6 to +6, with 0 being neutral.
 // Each stage modifies the stat by a ratio: (numerator / denominator).
 //
 // Reference: pokeemerald/src/pokemon.c gStatStageRatios[]
 // ============================================================================
 
-constexpr StatStage MIN_STAT_STAGE = 0;      // -6
-constexpr StatStage DEFAULT_STAT_STAGE = 6;  // neutral
-constexpr StatStage MAX_STAT_STAGE = 12;     // +6
+constexpr int8_t MIN_STAT_STAGE = -6;
+constexpr int8_t DEFAULT_STAT_STAGE = 0;
+constexpr int8_t MAX_STAT_STAGE = 6;
 
-// Stat stage ratios [stage][0=numerator, 1=denominator]
-// Stage 0 = -6, Stage 6 = neutral, Stage 12 = +6
+/**
+ * @brief Convert signed stage (-6 to +6) to array index (0 to 12).
+ */
+constexpr size_t stage_to_index(int8_t stage) {
+    return static_cast<size_t>(stage + 6);
+}
+
+// Stat stage ratios [index][0=numerator, 1=denominator]
+// Index 0 = stage -6, Index 6 = neutral, Index 12 = stage +6
 //
 // clang-format off
-constexpr uint8_t STAT_STAGE_RATIOS[MAX_STAT_STAGE + 1][2] = {
+constexpr uint8_t STAT_STAGE_RATIOS[13][2] = {
     {10, 40},  // -6: 10/40 = 0.25x
     {10, 35},  // -5: 10/35 ≈ 0.29x
     {10, 30},  // -4: 10/30 ≈ 0.33x
@@ -48,19 +55,20 @@ constexpr uint8_t STAT_STAGE_RATIOS[MAX_STAT_STAGE + 1][2] = {
 /**
  * @brief Apply stat stage modifier to a base stat value.
  *
- * @pre stage must be in range [0, 12]
+ * @pre stage must be in range [-6, 6]
  *
  * @param base_stat The unmodified stat value
- * @param stage The stat stage (0-12, where 6 is neutral)
+ * @param stage The stat stage (-6 to +6, where 0 is neutral)
  *
  * @return The modified stat value after applying stage multiplier
  */
-constexpr StatValue apply_stat_stage(StatValue base_stat, StatStage stage) {
-    CONSTEXPR_ASSERT(stage <= MAX_STAT_STAGE);
+constexpr StatValue apply_stat_stage(StatValue base_stat, int8_t stage) {
+    CONSTEXPR_ASSERT(stage >= MIN_STAT_STAGE && stage <= MAX_STAT_STAGE);
 
+    size_t idx = stage_to_index(stage);
     uint32_t result = base_stat;
-    result *= STAT_STAGE_RATIOS[stage][0];
-    result /= STAT_STAGE_RATIOS[stage][1];
+    result *= STAT_STAGE_RATIOS[idx][0];
+    result /= STAT_STAGE_RATIOS[idx][1];
 
     return static_cast<StatValue>(result);
 }
@@ -68,18 +76,18 @@ constexpr StatValue apply_stat_stage(StatValue base_stat, StatStage stage) {
 /**
  * @brief Clamp a stat stage delta to valid range.
  *
- * @param current Current stage value (0-12)
+ * @param current Current stage value (-6 to +6)
  * @param delta Change to apply (can be negative)
  *
- * @return New stage value clamped to [0, 12]
+ * @return New stage value clamped to [-6, +6]
  */
-constexpr StatStage clamp_stat_stage(StatStage current, int8_t delta) {
+constexpr int8_t clamp_stat_stage(int8_t current, int8_t delta) {
     int16_t result = static_cast<int16_t>(current) + delta;
     if (result < MIN_STAT_STAGE)
         return MIN_STAT_STAGE;
     if (result > MAX_STAT_STAGE)
         return MAX_STAT_STAGE;
-    return static_cast<StatStage>(result);
+    return static_cast<int8_t>(result);
 }
 
 }  // namespace logic::calc

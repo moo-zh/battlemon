@@ -36,8 +36,8 @@ using Effectiveness = uint16_t;
 /// Calculated stat value (HP, Attack, Defense, etc.)
 using StatValue = uint16_t;
 
-/// Stat stage modifier (0-12, where 6 = neutral)
-using StatStage = uint8_t;
+/// Stat stage modifier (-6 to +6, where 0 = neutral)
+using StatStage = int8_t;
 
 /// Nature modifier result (-1, 0, +1)
 using NatureModifier = int8_t;

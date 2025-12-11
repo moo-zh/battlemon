@@ -10,7 +10,7 @@ namespace logic::ops {
 // ============================================================================
 //
 // ops for modifying stat stages (-6 to +6).
-// Stages are stored as 0-12 with 6 being neutral.
+// Stages are stored as signed int8_t with 0 being neutral.
 //
 // Domain: Slot (writes stat stages)
 // Stage:  Genesis -> EffectApplied (for stat-only moves)
@@ -61,12 +61,12 @@ struct ModifyUserStat : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
     static void execute(dsl::BattleContext& ctx) {
         int8_t& stage = detail::get_stage(*ctx.attacker_slot, S);
 
-        // Apply modification with bounds
+        // Apply modification with bounds (-6 to +6)
         int8_t new_stage = stage + Stages;
-        if (new_stage < 0)
-            new_stage = 0;
-        if (new_stage > 12)
-            new_stage = 12;
+        if (new_stage < -6)
+            new_stage = -6;
+        if (new_stage > 6)
+            new_stage = 6;
 
         // Check if change happened (for "X's Y won't go any higher/lower!")
         if (new_stage == stage) {
@@ -91,10 +91,10 @@ struct ModifyDefenderStat : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
         int8_t& stage = detail::get_stage(*ctx.defender_slot, S);
 
         int8_t new_stage = stage + Stages;
-        if (new_stage < 0)
-            new_stage = 0;
-        if (new_stage > 12)
-            new_stage = 12;
+        if (new_stage < -6)
+            new_stage = -6;
+        if (new_stage > 6)
+            new_stage = 6;
 
         if (new_stage == stage) {
             ctx.result.failed = true;
@@ -124,10 +124,10 @@ struct TryModifyDefenderStat : CommandMeta<Domain::Slot, DamageApplied, EffectAp
         int8_t& stage = detail::get_stage(*ctx.defender_slot, S);
 
         int8_t new_stage = stage + Stages;
-        if (new_stage < 0)
-            new_stage = 0;
-        if (new_stage > 12)
-            new_stage = 12;
+        if (new_stage < -6)
+            new_stage = -6;
+        if (new_stage > 6)
+            new_stage = 6;
 
         stage = new_stage;
     }
@@ -173,7 +173,7 @@ using TryLowerDefenderSpd1 = TryModifyDefenderStat<Stat::SPD, -1>;
 //                          RESET ALL STATS (Haze)
 // ============================================================================
 //
-// Resets all stat stages for both attacker and defender to neutral (6).
+// Resets all stat stages for both attacker and defender to neutral (0).
 // In a full implementation, this would iterate over all battlers.
 //
 // Domain: Slot
@@ -193,13 +193,13 @@ struct ResetAllStats : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
 
    private:
     static void reset_slot(logic::state::SlotState& slot) {
-        slot.atk_stage = 6;
-        slot.def_stage = 6;
-        slot.spd_stage = 6;
-        slot.sp_atk_stage = 6;
-        slot.sp_def_stage = 6;
-        slot.accuracy_stage = 6;
-        slot.evasion_stage = 6;
+        slot.atk_stage = 0;
+        slot.def_stage = 0;
+        slot.spd_stage = 0;
+        slot.sp_atk_stage = 0;
+        slot.sp_def_stage = 0;
+        slot.accuracy_stage = 0;
+        slot.evasion_stage = 0;
     }
 };
 
