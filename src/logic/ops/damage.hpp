@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base.hpp"
+#include "../calc/damage.hpp"
 
 namespace logic::ops {
 
@@ -15,6 +16,31 @@ namespace logic::ops {
 // Stage:  AccuracyResolved -> DamageCalculated
 // ============================================================================
 
+namespace detail {
+
+// Gen III physical/special split is based on type, not move
+// Physical: Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Steel
+// Special: Fire, Water, Grass, Electric, Psychic, Ice, Dragon, Dark
+constexpr bool is_physical_type(types::enums::Type type) {
+    using enum types::enums::Type;
+    switch (type) {
+        case NORMAL:
+        case FIGHTING:
+        case FLYING:
+        case POISON:
+        case GROUND:
+        case ROCK:
+        case BUG:
+        case GHOST:
+        case STEEL:
+            return true;
+        default:
+            return false;
+    }
+}
+
+}  // namespace detail
+
 struct CalculateDamage
     : CommandMeta<Domain::Slot | Domain::Mon, AccuracyResolved, DamageCalculated> {
     static void execute(dsl::BattleContext& ctx) {
@@ -24,18 +50,56 @@ struct CalculateDamage
             return;
         }
 
-        // TODO: Full Gen III damage formula
-        // ((2 * Level / 5 + 2) * Power * Attack / Defense) / 50 + 2
-        // Then apply: STAB, type effectiveness, critical, random factor
+        const auto& attacker = ctx.attacker();
+        const auto& defender = ctx.defender();
+        const auto& move = *ctx.move;
 
-        // For smoke testing, use simplified calculation
-        uint16_t power = ctx.effective_power();
+        // Determine physical vs special based on move type (Gen III)
+        bool is_physical = detail::is_physical_type(move.type);
 
-        // Placeholder damage calculation
-        // Real formula will use stats, levels, type chart, etc.
-        ctx.result.damage = power;         // Just use power for now
-        ctx.result.effectiveness = 0x100;  // Neutral
-        ctx.result.critical = false;
+        // Build damage params
+        calc::DamageParams params{};
+        params.level = attacker.level;
+        params.power = ctx.effective_power();
+        params.move_type = move.type;
+
+        // Attack/defense based on physical vs special
+        if (is_physical) {
+            params.attack = ctx.override.attack > 0
+                ? ctx.override.attack : attacker.attack;
+            params.defense = ctx.override.defense > 0
+                ? ctx.override.defense : defender.defense;
+            params.attack_stage = ctx.attacker_slot
+                ? static_cast<uint8_t>(ctx.attacker_slot->atk_stage)
+                : calc::DEFAULT_STAT_STAGE;
+            params.defense_stage = ctx.defender_slot
+                ? static_cast<uint8_t>(ctx.defender_slot->def_stage)
+                : calc::DEFAULT_STAT_STAGE;
+        } else {
+            params.attack = ctx.override.attack > 0
+                ? ctx.override.attack : attacker.sp_attack;
+            params.defense = ctx.override.defense > 0
+                ? ctx.override.defense : defender.sp_defense;
+            params.attack_stage = ctx.attacker_slot
+                ? static_cast<uint8_t>(ctx.attacker_slot->sp_atk_stage)
+                : calc::DEFAULT_STAT_STAGE;
+            params.defense_stage = ctx.defender_slot
+                ? static_cast<uint8_t>(ctx.defender_slot->sp_def_stage)
+                : calc::DEFAULT_STAT_STAGE;
+        }
+
+        // Types for STAB and effectiveness
+        params.attacker_type1 = attacker.type1;
+        params.attacker_type2 = attacker.type2;
+        params.defender_type1 = defender.type1;
+        params.defender_type2 = defender.type2;
+
+        // Calculate damage
+        auto result = calc::calculate_damage(params);
+
+        ctx.result.damage = result.damage;
+        ctx.result.effectiveness = result.effectiveness;
+        ctx.result.critical = result.critical;
     }
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 
 #include "field.hpp"
@@ -7,6 +8,7 @@
 #include "side.hpp"
 #include "slot.hpp"
 
+#include "../../types/enums/type.hpp"
 #include "../../types/models/move.hpp"
 
 namespace dsl {
@@ -46,11 +48,29 @@ struct EffectResult {
     uint8_t pursuit_user_slot{0xFF};
 };
 
-// Damage calculation overrides
+// Computed active mon info (set by BattleEngine before effect execution)
+// Contains pre-calculated stats that have already applied nature, IVs, EVs.
+// Effects use these directly; stat stages are applied during damage calc.
+struct ActiveMon {
+    uint8_t level{50};  // Battle Factory uses level 50
+
+    // Computed stats (before stat stage modifiers)
+    uint16_t attack{100};
+    uint16_t defense{100};
+    uint16_t sp_attack{100};
+    uint16_t sp_defense{100};
+    uint16_t speed{100};
+
+    // Types for STAB and effectiveness calculations
+    types::enums::Type type1{types::enums::Type::NONE};
+    types::enums::Type type2{types::enums::Type::NONE};
+};
+
+// Damage calculation overrides (for moves that ignore normal stats)
 struct DamageOverride {
     uint16_t power{0};    // 0 = use move's power
-    uint16_t attack{0};   // 0 = use attacker's stat
-    uint16_t defense{0};  // 0 = use defender's stat
+    uint16_t attack{0};   // 0 = use active mon's attack stat
+    uint16_t defense{0};  // 0 = use active mon's defense stat
 };
 
 // Maximum slots in battle (2 for singles, 4 for doubles)
@@ -81,6 +101,14 @@ struct BattleContext {
     // Domain 4: Mons (per-pokemon)
     logic::state::MonState* attacker_mon{nullptr};
     logic::state::MonState* defender_mon{nullptr};
+
+    // ========================================================================
+    //                         ACTIVE MON INFO
+    // ========================================================================
+
+    // Computed stats for damage calculation (set by BattleEngine)
+    ActiveMon* attacker_active{nullptr};
+    ActiveMon* defender_active{nullptr};
 
     // ========================================================================
     //                             MOVE CONTEXT
@@ -124,6 +152,18 @@ struct BattleContext {
     // Get effective move power (considering overrides)
     [[nodiscard]] constexpr uint16_t effective_power() const {
         return override.power > 0 ? override.power : move->power;
+    }
+
+    // Get attacker's active mon info (asserts non-null)
+    [[nodiscard]] const ActiveMon& attacker() const {
+        assert(attacker_active && "attacker_active must be set for damage calc");
+        return *attacker_active;
+    }
+
+    // Get defender's active mon info (asserts non-null)
+    [[nodiscard]] const ActiveMon& defender() const {
+        assert(defender_active && "defender_active must be set for damage calc");
+        return *defender_active;
     }
 };
 

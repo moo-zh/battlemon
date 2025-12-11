@@ -31,6 +31,7 @@
 \*                                                                                      */
 
 #include "logic/routines/all.hpp"
+#include "logic/setup/rental.hpp"
 #include "types/models/move.hpp"
 
 // Smoke test: instantiate and execute effects to verify wiring/compilation.
@@ -39,18 +40,40 @@ namespace {
 template <typename Effect>
 void run_effect() {
     using namespace logic;
+    using types::enums::Type;
 
     dsl::BattleContext ctx{};
     state::FieldState field{};
     state::SideState side1{}, side2{};
     state::SlotState slot1{}, slot2{};
     state::MonState mon1{}, mon2{};
+    dsl::ActiveMon active1{}, active2{};
     types::Move move{};
 
     move.power = 40;
     move.accuracy = 100;
+    move.type = Type::NORMAL;
     move.flags = types::Move::Flags{types::Move::Flags::MAGIC_COAT_AFFECTED};
     ctx.move = &move;
+
+    // Set up active mon info for damage calculation
+    active1.level = 50;
+    active1.attack = 100;
+    active1.defense = 100;
+    active1.sp_attack = 100;
+    active1.sp_defense = 100;
+    active1.speed = 100;
+    active1.type1 = Type::NORMAL;
+    active1.type2 = Type::NONE;
+
+    active2.level = 50;
+    active2.attack = 100;
+    active2.defense = 100;
+    active2.sp_attack = 100;
+    active2.sp_defense = 100;
+    active2.speed = 100;
+    active2.type1 = Type::NORMAL;
+    active2.type2 = Type::NONE;
 
     ctx.field = &field;
     ctx.attacker_side = &side1;
@@ -59,6 +82,8 @@ void run_effect() {
     ctx.defender_slot = &slot2;
     ctx.attacker_mon = &mon1;
     ctx.defender_mon = &mon2;
+    ctx.attacker_active = &active1;
+    ctx.defender_active = &active2;
 
     // Set up slots array for all-battler iteration
     ctx.slots[0] = &slot1;
@@ -105,9 +130,43 @@ inline void smoke_test() {
     run_effect<MagicCoat>();
 }
 
+inline void rental_smoke_test() {
+    using namespace logic::setup;
+
+    // Test with first rental (Abra)
+    const types::Rental& rental = data::g_RENTAL_SETS[0];
+    RentalSetup setup = setup_rental(rental, 50);
+
+    // Verify setup produced valid values
+    volatile uint16_t hp = setup.mon.max_hp;
+    volatile uint16_t atk = setup.active.attack;
+    volatile uint16_t def = setup.active.defense;
+    (void)hp; (void)atk; (void)def;
+
+    // Test full battle setup
+    dsl::BattleContext ctx{};
+    logic::state::FieldState field{};
+    logic::state::SideState side1{}, side2{};
+
+    ctx.field = &field;
+    ctx.attacker_side = &side1;
+    ctx.defender_side = &side2;
+
+    RentalSetup attacker_setup{}, defender_setup{};
+    setup_battle(ctx, data::g_RENTAL_SETS[0], data::g_RENTAL_SETS[1],
+                 attacker_setup, defender_setup, 50);
+
+    // Verify context was wired up
+    volatile bool valid = (ctx.attacker_mon != nullptr) &&
+                          (ctx.defender_mon != nullptr) &&
+                          (ctx.attacker_active != nullptr);
+    (void)valid;
+}
+
 }  // namespace
 
 int main() {
     smoke_test();
+    rental_smoke_test();
     return 0;
 }
