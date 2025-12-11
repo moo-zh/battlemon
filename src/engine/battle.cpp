@@ -2,6 +2,7 @@
 
 #include "data/move.hpp"
 #include "dispatch.hpp"
+#include "dsl/turn_pipeline.hpp"
 #include "logic/calc/speed.hpp"
 #include "util/random.hpp"
 
@@ -38,21 +39,49 @@ void BattleEngine::init(const types::Rental& p1_rental, const types::Rental& p2_
 // ============================================================================
 
 void BattleEngine::execute_turn(const BattleAction& p1_action, const BattleAction& p2_action) {
+    // ========================================================================
+    // TurnGenesis -> Clear per-turn state
+    // ========================================================================
     p1_setup_.slot.clear_turn_flags();
     p2_setup_.slot.clear_turn_flags();
+
+    // ========================================================================
+    // TurnGenesis -> PriorityDetermined
+    // Fire Quick Claw and other turn-start item events
+    // ========================================================================
+    bool p1_quick_claw = false;
+    bool p2_quick_claw = false;
+    dsl::turn::fire_turn_start_for_slot(ctx_, &p1_setup_.slot, p1_quick_claw);
+    dsl::turn::fire_turn_start_for_slot(ctx_, &p2_setup_.slot, p2_quick_claw);
 
     uint8_t first_slot, second_slot;
     const BattleAction* first_action;
     const BattleAction* second_action;
-    determine_order(p1_action, p2_action, first_slot, second_slot, first_action, second_action);
+    determine_order(p1_action, p2_action, first_slot, second_slot, first_action, second_action,
+                    p1_quick_claw, p2_quick_claw);
 
+    // ========================================================================
+    // PriorityDetermined -> ActionsResolving
+    // Execute moves in determined order
+    // ========================================================================
     execute_action(first_slot, *first_action);
 
     if (!get_mon(second_slot).is_fainted()) {
         execute_action(second_slot, *second_action);
     }
 
-    // TODO: End-of-turn effects (weather damage, poison, etc.)
+    // ========================================================================
+    // ActionsResolved -> TurnEnd
+    // Fire end-of-turn item events (Leftovers, etc.)
+    // ========================================================================
+    if (!p1_setup_.mon.is_fainted()) {
+        dsl::turn::fire_turn_end_for_slot(ctx_, &p1_setup_.slot, &p1_setup_.mon);
+    }
+    if (!p2_setup_.mon.is_fainted()) {
+        dsl::turn::fire_turn_end_for_slot(ctx_, &p2_setup_.slot, &p2_setup_.mon);
+    }
+
+    // TODO: Weather damage, poison/burn damage, etc.
 }
 
 // ============================================================================
@@ -62,7 +91,8 @@ void BattleEngine::execute_turn(const BattleAction& p1_action, const BattleActio
 void BattleEngine::determine_order(const BattleAction& p1_action, const BattleAction& p2_action,
                                    uint8_t& first_slot, uint8_t& second_slot,
                                    const BattleAction*& first_action,
-                                   const BattleAction*& second_action) {
+                                   const BattleAction*& second_action, bool p1_quick_claw,
+                                   bool p2_quick_claw) {
     int8_t p1_priority = get_action_priority(p1_action, 0);
     int8_t p2_priority = get_action_priority(p2_action, 1);
 
@@ -71,7 +101,23 @@ void BattleEngine::determine_order(const BattleAction& p1_action, const BattleAc
     auto p2_speed =
         logic::calc::calc_effective_speed(p2_setup_.active, p2_setup_.slot, p2_setup_.mon);
 
-    auto order = logic::calc::determine_turn_order(p1_priority, p2_priority, p1_speed, p2_speed);
+    // Quick Claw: if one battler has Quick Claw active and the other doesn't,
+    // the Quick Claw user moves first (within same priority bracket)
+    logic::calc::TurnOrder order;
+
+    if (p1_priority != p2_priority) {
+        // Different priority - Quick Claw doesn't matter
+        order = logic::calc::determine_turn_order(p1_priority, p2_priority, p1_speed, p2_speed);
+    } else if (p1_quick_claw && !p2_quick_claw) {
+        // P1 Quick Claw triggered, P2 didn't -> P1 first
+        order = logic::calc::TurnOrder::BATTLER1_FIRST;
+    } else if (p2_quick_claw && !p1_quick_claw) {
+        // P2 Quick Claw triggered, P1 didn't -> P2 first
+        order = logic::calc::TurnOrder::BATTLER2_FIRST;
+    } else {
+        // Both or neither have Quick Claw -> normal speed comparison
+        order = logic::calc::determine_turn_order(p1_priority, p2_priority, p1_speed, p2_speed);
+    }
 
     if (order == logic::calc::TurnOrder::SPEED_TIE) {
         order = (util::random::Random(2) == 0) ? logic::calc::TurnOrder::BATTLER1_FIRST

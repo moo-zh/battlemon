@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../dsl/item/dispatch.hpp"
 #include "../calc/damage.hpp"
 #include "base.hpp"
 
@@ -41,13 +42,16 @@ constexpr bool is_physical_type(types::enums::Type type) {
 
 }  // namespace detail
 
-struct CalculateDamage
-    : CommandMeta<Domain::Slot | Domain::Mon, AccuracyResolved, DamageCalculated> {
-    static void execute(dsl::BattleContext& ctx) {
-        // Skip if move missed
+struct CalculateDamage : CommandMeta<Domain::Slot | Domain::Mon | Domain::Transient,
+                                     AccuracyResolved, DamageCalculated> {
+    using transient_type = calc::DamageParams;
+
+    static transient_type build_transient(dsl::BattleContext& ctx) {
+        transient_type params{};
+
+        // If the move already missed, params stay zeroed.
         if (ctx.result.missed) {
-            ctx.result.damage = 0;
-            return;
+            return params;
         }
 
         const auto& attacker = ctx.attacker();
@@ -57,23 +61,28 @@ struct CalculateDamage
         // Determine physical vs special based on move type (Gen III)
         bool is_physical = detail::is_physical_type(move.type);
 
-        // Build damage params
-        calc::DamageParams params{};
-        params.level = attacker.level;
+        // Build initial stats (before item modifiers)
+        const uint16_t override_attack = ctx.override.attack;
+        const uint16_t override_defense = ctx.override.defense;
+
+        params.attack = is_physical ? (override_attack > 0 ? override_attack : attacker.attack)
+                                    : (override_attack > 0 ? override_attack : attacker.sp_attack);
+        params.defense = is_physical
+                             ? (override_defense > 0 ? override_defense : defender.defense)
+                             : (override_defense > 0 ? override_defense : defender.sp_defense);
+
         params.power = ctx.effective_power();
+        params.crit_stage = 0;  // TODO: Base crit stage from Focus Energy, move, etc.
+        params.level = attacker.level;
         params.move_type = move.type;
 
-        // Attack/defense based on physical vs special
+        // Stat stages
         if (is_physical) {
-            params.attack = ctx.override.attack > 0 ? ctx.override.attack : attacker.attack;
-            params.defense = ctx.override.defense > 0 ? ctx.override.defense : defender.defense;
             params.attack_stage =
                 ctx.attacker_slot ? ctx.attacker_slot->atk_stage : calc::DEFAULT_STAT_STAGE;
             params.defense_stage =
                 ctx.defender_slot ? ctx.defender_slot->def_stage : calc::DEFAULT_STAT_STAGE;
         } else {
-            params.attack = ctx.override.attack > 0 ? ctx.override.attack : attacker.sp_attack;
-            params.defense = ctx.override.defense > 0 ? ctx.override.defense : defender.sp_defense;
             params.attack_stage =
                 ctx.attacker_slot ? ctx.attacker_slot->sp_atk_stage : calc::DEFAULT_STAT_STAGE;
             params.defense_stage =
@@ -85,6 +94,16 @@ struct CalculateDamage
         params.attacker_type2 = attacker.type2;
         params.defender_type1 = defender.type1;
         params.defender_type2 = defender.type2;
+
+        return params;
+    }
+
+    static void execute(dsl::BattleContext& ctx, transient_type& params) {
+        // Skip if move missed
+        if (ctx.result.missed) {
+            ctx.result.damage = 0;
+            return;
+        }
 
         // Calculate damage
         auto result = calc::calculate_damage(params);
@@ -129,8 +148,20 @@ struct ApplyDamage : CommandMeta<Domain::Slot | Domain::Mon, DamageCalculated, D
             }
         }
 
+        // Fire item hooks for damage application (Focus Band, etc.)
+        bool survived_fatal = false;
+        uint16_t defender_hp = ctx.defender_mon ? ctx.defender_mon->current_hp : 0;
+        dsl::item::fire_pre_damage_apply(ctx, damage, defender_hp, survived_fatal);
+
+        // Update result with potentially modified damage
+        ctx.result.damage = damage;
+
         // Apply to actual HP
         ctx.defender_mon->apply_damage(damage);
+
+        // Track if Focus Band saved the defender (for messaging/animation)
+        // Could add a field to EffectResult if needed
+        (void)survived_fatal;
     }
 };
 

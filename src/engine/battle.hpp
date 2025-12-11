@@ -119,7 +119,8 @@ class BattleEngine {
 
     void determine_order(const BattleAction& p1_action, const BattleAction& p2_action,
                          uint8_t& first_slot, uint8_t& second_slot,
-                         const BattleAction*& first_action, const BattleAction*& second_action);
+                         const BattleAction*& first_action, const BattleAction*& second_action,
+                         bool p1_quick_claw, bool p2_quick_claw);
 
     [[nodiscard]] int8_t get_action_priority(const BattleAction& action, uint8_t slot) const;
 

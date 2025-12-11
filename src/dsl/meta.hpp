@@ -42,6 +42,14 @@ template <Domain Allowed, Domain Required>
 inline constexpr bool ValidAccess =
     (static_cast<uint8_t>(Required) & ~static_cast<uint8_t>(Allowed)) == 0;
 
+/**
+ * @brief Checks if a Command requests Transient (scratch) access.
+ * @tparam Cmd Command type.
+ */
+template <typename Cmd>
+inline constexpr bool RequestsTransient =
+    (static_cast<uint8_t>(Cmd::domains) & static_cast<uint8_t>(Domain::Transient)) != 0;
+
 /** @} */  // end of domain_validation group
 
 /**
@@ -60,15 +68,6 @@ inline constexpr bool ValidAccess =
  */
 template <typename Current, typename Required>
 concept StageReached = stage_leq_v<Required, Current>;
-
-/**
- * @brief Legacy alias for StageReached check.
- * @tparam Current The pipeline's current stage.
- * @tparam Required The stage needed by the command.
- * @deprecated Use StageReached concept instead.
- */
-template <typename Current, typename Required>
-inline constexpr bool AtStage = stage_leq_v<Required, Current>;
 
 /** @} */  // end of stage_validation group
 
@@ -93,6 +92,22 @@ concept Command = requires {
     typename T::output_stage;
     { T::domains } -> std::same_as<const Domain&>;
 };
+
+/**
+ * @brief Command that declares transient scratch payload.
+ *
+ * Requires Domain::Transient in domains mask, transient_type alias,
+ * build_transient(ctx) factory, and execute(ctx, transient_type&) overload.
+ */
+template <typename T>
+concept TransientCommand = Command<T> && RequestsTransient<T> &&
+                           requires(BattleContext& ctx, typename T::transient_type& payload) {
+                               typename T::transient_type;
+                               {
+                                   T::build_transient(ctx)
+                               } -> std::convertible_to<typename T::transient_type>;
+                               { T::execute(ctx, payload) };
+                           };
 
 /**
  * @brief Concept for Action types (Seq, Match, etc.).
@@ -134,17 +149,6 @@ struct LastType<Last> {
  */
 template <typename... Ts>
 using last_type_t = typename LastType<Ts...>::type;
-
-/**
- * @brief Combines multiple domains at compile time.
- * @tparam Ds Domain values to combine.
- *
- * @code
- * constexpr Domain TouchFieldAndMon = meta::Combine<Domain::Field, Domain::Mon>;
- * @endcode
- */
-template <Domain... Ds>
-inline constexpr Domain Combine = static_cast<Domain>((static_cast<uint8_t>(Ds) | ... | 0));
 
 /** @} */  // end of type_traits group
 

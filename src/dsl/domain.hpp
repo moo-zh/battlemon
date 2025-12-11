@@ -20,18 +20,20 @@ namespace dsl {
  * state they're permitted to modify. Commands declare required domains, and
  * effects declare allowed domains - mismatches cause compile errors.
  *
- * | Domain | Scope           | Lifecycle                          |
- * |--------|-----------------|-----------------------------------|
- * | Field  | Global          | Persists entire battle            |
- * | Side   | Per-team        | Persists entire battle            |
- * | Slot   | Per-position    | Cleared on switch                 |
- * | Mon    | Per-pokemon     | Persists through switches         |
+ * | Domain    | Scope           | Lifecycle                          |
+ * |-----------|-----------------|-----------------------------------|
+ * | Field     | Global          | Persists entire battle            |
+ * | Side      | Per-team        | Persists entire battle            |
+ * | Slot      | Per-position    | Cleared on switch                 |
+ * | Mon       | Per-pokemon     | Persists through switches         |
+ * | Transient | Scoped scratch  | Exists only for the current op    |
  */
 enum class Domain : uint8_t {
-    Field = 1 << 0,  ///< Global state (weather, future sight, wish).
-    Side = 1 << 1,   ///< Per-team state (screens, hazards).
-    Slot = 1 << 2,   ///< Per-position state (stat stages, volatiles).
-    Mon = 1 << 3,    ///< Per-pokemon state (HP, status, PP).
+    Field = 1 << 0,      ///< Global state (weather, future sight, wish).
+    Side = 1 << 1,       ///< Per-team state (screens, hazards).
+    Slot = 1 << 2,       ///< Per-position state (stat stages, volatiles).
+    Mon = 1 << 3,        ///< Per-pokemon state (HP, status, PP).
+    Transient = 1 << 4,  ///< Scoped scratch data with no persistence.
 };
 
 /**
@@ -82,6 +84,9 @@ constexpr Domain StatChange = Domain::Slot;
 
 /// Full access to all domains (for complex effects like Baton Pass).
 constexpr Domain All = Domain::Field | Domain::Side | Domain::Slot | Domain::Mon;
+
+/// Scoped scratch access (must be explicitly opted into).
+constexpr Domain Scratch = Domain::Transient;
 
 }  // namespace domains
 

@@ -12,6 +12,7 @@
 #include "domain.hpp"
 #include "meta.hpp"
 #include "stages.hpp"
+#include "transition.hpp"
 
 namespace dsl {
 
@@ -65,8 +66,20 @@ class Pipeline {
         requires meta::ValidAccess<Allowed, Cmd::domains> &&
                  meta::StageReached<Stage, typename Cmd::input_stage>
     [[nodiscard]] constexpr auto run() -> Pipeline<typename Cmd::output_stage, Allowed> {
-        Cmd::execute(*ctx_);
-        return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
+        if constexpr (meta::TransientCommand<Cmd>) {
+            auto payload = Cmd::build_transient(*ctx_);
+            StageTransition<Stage, typename Cmd::output_stage>::execute(*ctx_, payload);
+            Cmd::execute(*ctx_, payload);
+            return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
+        } else {
+            static_assert(!meta::RequestsTransient<Cmd> || meta::TransientCommand<Cmd>,
+                          "Command declares Domain::Transient but is missing transient "
+                          "payload support");
+
+            StageTransition<Stage, typename Cmd::output_stage>::execute(*ctx_);
+            Cmd::execute(*ctx_);
+            return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
+        }
     }
 
     /**
@@ -81,8 +94,20 @@ class Pipeline {
                  meta::StageReached<Stage, typename Cmd::input_stage>
     [[nodiscard]] constexpr auto run(Args&&... args)
         -> Pipeline<typename Cmd::output_stage, Allowed> {
-        Cmd::execute(*ctx_, static_cast<Args&&>(args)...);
-        return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
+        if constexpr (meta::TransientCommand<Cmd>) {
+            auto payload = Cmd::build_transient(*ctx_);
+            StageTransition<Stage, typename Cmd::output_stage>::execute(*ctx_, payload);
+            Cmd::execute(*ctx_, payload, static_cast<Args&&>(args)...);
+            return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
+        } else {
+            static_assert(!meta::RequestsTransient<Cmd> || meta::TransientCommand<Cmd>,
+                          "Command declares Domain::Transient but is missing transient "
+                          "payload support");
+
+            StageTransition<Stage, typename Cmd::output_stage>::execute(*ctx_);
+            Cmd::execute(*ctx_, static_cast<Args&&>(args)...);
+            return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
+        }
     }
 
     /**

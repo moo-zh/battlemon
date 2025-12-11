@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "types/enums/item.hpp"
+
 namespace logic::state {
 
 // ============================================================================
@@ -108,6 +110,10 @@ struct SlotState {
     bool is_first_turn{true};
     bool moved_this_turn{false};
     bool bounce_move{false};  // Magic Coat: reflect eligible status moves
+
+    // Held item (copied from rental on switch-in, cleared on consumption)
+    types::enums::Item held_item{types::enums::Item::NONE};
+    bool item_consumed{false};
 
     // Helpers
     constexpr bool has(uint32_t flag) const { return volatiles & flag; }

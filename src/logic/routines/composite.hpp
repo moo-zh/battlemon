@@ -36,7 +36,7 @@ using SkyAttackAction =
     Match<FaintChecked, Branch<when::NotCharging, Do<BeginCharge>>, Otherwise<SkyAttackHit>>;
 }  // namespace detail
 
-EFFECT(SkyAttack, Pure) {
+EFFECT(SkyAttack, Pure | Scratch) {
     BEGIN(ctx)
     RUN_ACTION(detail::SkyAttackAction)
     END;
@@ -75,7 +75,7 @@ EFFECT(BatonPass, StatChange) {
 // Engine must check ctx.result.pursuit_intercept when defender switches and
 // resolve a pre-switch hit with doubled power.
 
-EFFECT(Pursuit, Pure) {
+EFFECT(Pursuit, Pure | Scratch) {
     BEGIN(ctx)
     RUN(MarkPursuitReady)
     RUN(CheckAccuracy)

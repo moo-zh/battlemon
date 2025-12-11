@@ -9,7 +9,7 @@ namespace logic::routines {
 // ============================================================================
 //
 // Effects that apply primary status conditions.
-// Domain: Status (Mon) or Pure (Slot | Mon) for damage+status combos
+// Domain: Status (Mon) or Pure | Scratch for damage+status combos
 // ============================================================================
 
 using namespace dsl;
@@ -19,7 +19,7 @@ using namespace dsl::domains;
 // POISON_HIT - Damage with 30% poison chance (Poison Sting, Sludge)
 // ----------------------------------------------------------------------------
 
-EFFECT(PoisonHit, Pure) {
+EFFECT(PoisonHit, Pure | Scratch) {
     BEGIN(ctx)
     RUN(CheckAccuracy)
     RUN(CalculateDamage)

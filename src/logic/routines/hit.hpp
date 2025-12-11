@@ -9,7 +9,7 @@ namespace logic::routines {
 // ============================================================================
 //
 // Pure damage effects (Tackle, Pound, Scratch, etc.)
-// Domain: Pure (Slot | Mon)
+// Domain: Pure | Scratch (Slot | Mon + transient scratch)
 // ============================================================================
 
 using namespace dsl;
@@ -21,7 +21,7 @@ using namespace dsl::domains;
 // The simplest damaging move: accuracy check, calculate damage, apply damage,
 // check for faint. Used by Tackle, Pound, Scratch, and ~50 other moves.
 
-EFFECT(Hit, Pure) {
+EFFECT(Hit, Pure | Scratch) {
     BEGIN(ctx)
     RUN(CheckAccuracy)
     RUN(CalculateDamage)
@@ -34,7 +34,7 @@ EFFECT(Hit, Pure) {
 // ABSORB - Damaging move that heals the attacker by 50% of damage dealt
 // ----------------------------------------------------------------------------
 
-EFFECT(Absorb, Pure) {
+EFFECT(Absorb, Pure | Scratch) {
     BEGIN(ctx)
     RUN(CheckAccuracy)
     RUN(CalculateDamage)
@@ -48,7 +48,7 @@ EFFECT(Absorb, Pure) {
 // TAKE_DOWN - Damaging move with recoil (25% of damage dealt)
 // ----------------------------------------------------------------------------
 
-EFFECT(TakeDown, Pure) {
+EFFECT(TakeDown, Pure | Scratch) {
     BEGIN(ctx)
     RUN(CheckAccuracy)
     RUN(CalculateDamage)
