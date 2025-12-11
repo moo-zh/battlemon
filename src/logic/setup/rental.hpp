@@ -6,7 +6,6 @@
 #include "../state/context.hpp"
 #include "../state/mon.hpp"
 #include "../state/slot.hpp"
-
 #include "data/rental.hpp"
 #include "data/species.hpp"
 #include "types/models/rental.hpp"
@@ -59,12 +58,18 @@ constexpr calc::EVSpread unpack_ev_spread(types::EvSpread spread) {
 
     // Count flagged stats
     uint8_t stat_count = 0;
-    if (spread.hp()) ++stat_count;
-    if (spread.atk()) ++stat_count;
-    if (spread.def()) ++stat_count;
-    if (spread.sp_atk()) ++stat_count;
-    if (spread.sp_def()) ++stat_count;
-    if (spread.spd()) ++stat_count;
+    if (spread.hp())
+        ++stat_count;
+    if (spread.atk())
+        ++stat_count;
+    if (spread.def())
+        ++stat_count;
+    if (spread.sp_atk())
+        ++stat_count;
+    if (spread.sp_def())
+        ++stat_count;
+    if (spread.spd())
+        ++stat_count;
 
     if (stat_count == 0) {
         return evs;  // No EVs allocated
@@ -73,15 +78,22 @@ constexpr calc::EVSpread unpack_ev_spread(types::EvSpread spread) {
     // Distribute 510 EVs evenly among flagged stats
     // Note: MAX_TOTAL_EVS = 510, but individual stat cap is 255 (uint8_t max)
     uint16_t ev_amount = calc::MAX_TOTAL_EVS / stat_count;
-    if (ev_amount > 255) ev_amount = 255;  // Cap to uint8_t max
+    if (ev_amount > 255)
+        ev_amount = 255;  // Cap to uint8_t max
 
     uint8_t ev_val = static_cast<uint8_t>(ev_amount);
-    if (spread.hp()) evs.hp = ev_val;
-    if (spread.atk()) evs.atk = ev_val;
-    if (spread.def()) evs.def = ev_val;
-    if (spread.sp_atk()) evs.sp_atk = ev_val;
-    if (spread.sp_def()) evs.sp_def = ev_val;
-    if (spread.spd()) evs.spd = ev_val;
+    if (spread.hp())
+        evs.hp = ev_val;
+    if (spread.atk())
+        evs.atk = ev_val;
+    if (spread.def())
+        evs.def = ev_val;
+    if (spread.sp_atk())
+        evs.sp_atk = ev_val;
+    if (spread.sp_def())
+        evs.sp_def = ev_val;
+    if (spread.spd())
+        evs.spd = ev_val;
 
     return evs;
 }
@@ -98,8 +110,8 @@ constexpr calc::EVSpread unpack_ev_spread(types::EvSpread spread) {
 inline const types::Species* lookup_species(types::enums::Species species) {
     // The species table is indexed directly by species enum value
     auto index = static_cast<uint16_t>(species);
-    assert(index < sizeof(data::g_SPECIES_TABLE) / sizeof(data::g_SPECIES_TABLE[0])
-           && "species index out of bounds");
+    assert(index < sizeof(data::g_SPECIES_TABLE) / sizeof(data::g_SPECIES_TABLE[0]) &&
+           "species index out of bounds");
     return &data::g_SPECIES_TABLE[index];
 }
 
@@ -189,12 +201,9 @@ inline RentalSetup setup_rental(const types::Rental& rental, uint8_t level = 50)
  * @param defender_setup Output: defender's setup data (caller manages lifetime)
  * @param level Battle level (default 50)
  */
-inline void setup_battle(dsl::BattleContext& ctx,
-                         const types::Rental& attacker_rental,
-                         const types::Rental& defender_rental,
-                         RentalSetup& attacker_setup,
-                         RentalSetup& defender_setup,
-                         uint8_t level = 50) {
+inline void setup_battle(dsl::BattleContext& ctx, const types::Rental& attacker_rental,
+                         const types::Rental& defender_rental, RentalSetup& attacker_setup,
+                         RentalSetup& defender_setup, uint8_t level = 50) {
     attacker_setup = setup_rental(attacker_rental, level);
     defender_setup = setup_rental(defender_rental, level);
 

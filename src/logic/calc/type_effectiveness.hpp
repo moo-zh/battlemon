@@ -1,9 +1,8 @@
 #pragma once
 
-#include "util/assert.hpp"
-
 #include "types/calc.hpp"
 #include "types/enums/type.hpp"
+#include "util/assert.hpp"
 
 namespace logic::calc {
 
@@ -92,8 +91,8 @@ constexpr uint8_t TYPE_CHART[TYPE_COUNT][TYPE_COUNT] = {
  *   - 400 = 4x    (20 * 20, double super effective)
  */
 constexpr Effectiveness get_type_effectiveness(types::enums::Type attack_type,
-                                                types::enums::Type defend_type1,
-                                                types::enums::Type defend_type2) {
+                                               types::enums::Type defend_type1,
+                                               types::enums::Type defend_type2) {
     auto atk = static_cast<uint8_t>(attack_type);
     auto def1 = static_cast<uint8_t>(defend_type1);
     auto def2 = static_cast<uint8_t>(defend_type2);

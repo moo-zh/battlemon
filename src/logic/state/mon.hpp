@@ -44,7 +44,9 @@ struct MonState {
     constexpr bool is_alive() const { return current_hp > 0; }
     constexpr bool has_status() const { return status != Status::NONE; }
     constexpr bool is_asleep() const { return status == Status::SLEEP; }
-    constexpr bool is_poisoned() const { return status == Status::POISON || status == Status::TOXIC; }
+    constexpr bool is_poisoned() const {
+        return status == Status::POISON || status == Status::TOXIC;
+    }
     constexpr bool is_burned() const { return status == Status::BURN; }
     constexpr bool is_frozen() const { return status == Status::FREEZE; }
     constexpr bool is_paralyzed() const { return status == Status::PARALYSIS; }

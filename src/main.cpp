@@ -98,11 +98,16 @@ void run_effect() {
 
     Effect::execute(ctx);
 
-    volatile int16_t atk_delta = static_cast<int16_t>(mon1.current_hp) - static_cast<int16_t>(atk_hp_before);
-    volatile int16_t def_delta = static_cast<int16_t>(mon2.current_hp) - static_cast<int16_t>(def_hp_before);
+    volatile int16_t atk_delta =
+        static_cast<int16_t>(mon1.current_hp) - static_cast<int16_t>(atk_hp_before);
+    volatile int16_t def_delta =
+        static_cast<int16_t>(mon2.current_hp) - static_cast<int16_t>(def_hp_before);
     volatile bool status_applied = ctx.result.status_applied;
     volatile bool failed = ctx.result.failed;
-    (void)atk_delta; (void)def_delta; (void)status_applied; (void)failed;
+    (void)atk_delta;
+    (void)def_delta;
+    (void)status_applied;
+    (void)failed;
 }
 
 inline void smoke_test() {
@@ -141,7 +146,9 @@ inline void rental_smoke_test() {
     volatile uint16_t hp = setup.mon.max_hp;
     volatile uint16_t atk = setup.active.attack;
     volatile uint16_t def = setup.active.defense;
-    (void)hp; (void)atk; (void)def;
+    (void)hp;
+    (void)atk;
+    (void)def;
 
     // Test full battle setup
     dsl::BattleContext ctx{};
@@ -153,12 +160,11 @@ inline void rental_smoke_test() {
     ctx.defender_side = &side2;
 
     RentalSetup attacker_setup{}, defender_setup{};
-    setup_battle(ctx, data::g_RENTAL_SETS[0], data::g_RENTAL_SETS[1],
-                 attacker_setup, defender_setup, 50);
+    setup_battle(ctx, data::g_RENTAL_SETS[0], data::g_RENTAL_SETS[1], attacker_setup,
+                 defender_setup, 50);
 
     // Verify context was wired up
-    volatile bool valid = (ctx.attacker_mon != nullptr) &&
-                          (ctx.defender_mon != nullptr) &&
+    volatile bool valid = (ctx.attacker_mon != nullptr) && (ctx.defender_mon != nullptr) &&
                           (ctx.attacker_active != nullptr);
     (void)valid;
 }

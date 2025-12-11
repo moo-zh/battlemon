@@ -3,13 +3,12 @@
 #include <cassert>
 #include <cstdint>
 
+#include "../../types/enums/type.hpp"
+#include "../../types/models/move.hpp"
 #include "field.hpp"
 #include "mon.hpp"
 #include "side.hpp"
 #include "slot.hpp"
-
-#include "../../types/enums/type.hpp"
-#include "../../types/models/move.hpp"
 
 namespace dsl {
 
@@ -145,9 +144,7 @@ struct BattleContext {
     }
 
     // Check if attacker is on player's side (side 0)
-    [[nodiscard]] constexpr bool attacker_is_player() const {
-        return attacker_side_id == 0;
-    }
+    [[nodiscard]] constexpr bool attacker_is_player() const { return attacker_side_id == 0; }
 
     // Get effective move power (considering overrides)
     [[nodiscard]] constexpr uint16_t effective_power() const {

@@ -20,7 +20,7 @@ namespace logic::state {
 
 struct SideState {
     // Screens
-    uint8_t reflect_turns{0};       // 0 = inactive
+    uint8_t reflect_turns{0};  // 0 = inactive
     uint8_t light_screen_turns{0};
     uint8_t safeguard_turns{0};
     uint8_t mist_turns{0};
@@ -50,10 +50,14 @@ struct SideState {
 
     // Decrement screen timers (called each turn)
     constexpr void tick_screens() {
-        if (reflect_turns > 0) --reflect_turns;
-        if (light_screen_turns > 0) --light_screen_turns;
-        if (safeguard_turns > 0) --safeguard_turns;
-        if (mist_turns > 0) --mist_turns;
+        if (reflect_turns > 0)
+            --reflect_turns;
+        if (light_screen_turns > 0)
+            --light_screen_turns;
+        if (safeguard_turns > 0)
+            --safeguard_turns;
+        if (mist_turns > 0)
+            --mist_turns;
     }
 };
 

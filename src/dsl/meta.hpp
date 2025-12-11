@@ -91,7 +91,7 @@ template <typename T>
 concept Command = requires {
     typename T::input_stage;
     typename T::output_stage;
-    {T::domains}->std::same_as<const Domain&>;
+    { T::domains } -> std::same_as<const Domain&>;
 };
 
 /**
@@ -101,10 +101,7 @@ concept Command = requires {
  * Actions compose Commands and delegate to the pipeline.
  */
 template <typename T>
-concept Action = requires {
-    typename T::output_stage;
-}
-&&!Command<T>;
+concept Action = requires { typename T::output_stage; } && !Command<T>;
 
 /** @} */  // end of type_detection group
 

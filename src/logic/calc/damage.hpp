@@ -3,7 +3,6 @@
 #include "critical.hpp"
 #include "stat_stages.hpp"
 #include "type_effectiveness.hpp"
-
 #include "types/calc.hpp"
 #include "types/enums/type.hpp"
 #include "util/random.hpp"
@@ -47,13 +46,13 @@ struct DamageResult {
 struct DamageParams {
     // Attacker info
     Level level{50};
-    StatValue attack{100};      // Atk or SpAtk depending on move
+    StatValue attack{100};  // Atk or SpAtk depending on move
     StatStage attack_stage{DEFAULT_STAT_STAGE};
     types::enums::Type attacker_type1{types::enums::Type::NONE};
     types::enums::Type attacker_type2{types::enums::Type::NONE};
 
     // Defender info
-    StatValue defense{100};     // Def or SpDef depending on move
+    StatValue defense{100};  // Def or SpDef depending on move
     StatStage defense_stage{DEFAULT_STAT_STAGE};
     types::enums::Type defender_type1{types::enums::Type::NONE};
     types::enums::Type defender_type2{types::enums::Type::NONE};
@@ -64,8 +63,8 @@ struct DamageParams {
 
     // Modifiers
     CritStage crit_stage{0};
-    bool is_critical{false};   // Pre-rolled, or set to force crit
-    bool skip_random{false};   // For deterministic testing
+    bool is_critical{false};  // Pre-rolled, or set to force crit
+    bool skip_random{false};  // For deterministic testing
 };
 
 // ============================================================================
@@ -75,8 +74,7 @@ struct DamageParams {
 /**
  * @brief Check if attacker gets STAB (Same Type Attack Bonus).
  */
-constexpr bool has_stab(types::enums::Type move_type,
-                        types::enums::Type attacker_type1,
+constexpr bool has_stab(types::enums::Type move_type, types::enums::Type attacker_type1,
                         types::enums::Type attacker_type2) {
     return move_type == attacker_type1 || move_type == attacker_type2;
 }
@@ -108,7 +106,7 @@ struct EffectiveStats {
  * Critical hits ignore negative attack stages and positive defense stages.
  */
 constexpr EffectiveStats apply_crit_aware_stat_stages(const DamageParams& params,
-                                                       bool is_critical) {
+                                                      bool is_critical) {
     StatValue effective_attack = params.attack;
     StatValue effective_defense = params.defense;
 
@@ -127,7 +125,8 @@ constexpr EffectiveStats apply_crit_aware_stat_stages(const DamageParams& params
     }
 
     // Prevent division by zero
-    if (effective_defense == 0) effective_defense = 1;
+    if (effective_defense == 0)
+        effective_defense = 1;
 
     return {effective_attack, effective_defense};
 }
@@ -137,8 +136,8 @@ constexpr EffectiveStats apply_crit_aware_stat_stages(const DamageParams& params
  *
  * Formula: ((2 * Level / 5 + 2) * Power * Attack / Defense) / 50 + 2
  */
-constexpr DamageCalc calc_base_damage(Level level, MovePower power,
-                                       StatValue attack, StatValue defense) {
+constexpr DamageCalc calc_base_damage(Level level, MovePower power, StatValue attack,
+                                      StatValue defense) {
     DamageCalc damage = 2u * level / 5u + 2u;
     damage = damage * power * attack;
     damage = damage / defense;
@@ -168,8 +167,8 @@ inline DamageCalc apply_random_variance(DamageCalc damage, bool skip_random) {
  * @brief Apply STAB bonus (1.5x) if applicable.
  */
 constexpr DamageCalc apply_stab(DamageCalc damage, types::enums::Type move_type,
-                                 types::enums::Type attacker_type1,
-                                 types::enums::Type attacker_type2) {
+                                types::enums::Type attacker_type1,
+                                types::enums::Type attacker_type2) {
     if (has_stab(move_type, attacker_type1, attacker_type2)) {
         return damage * 3u / 2u;
     }
@@ -229,8 +228,8 @@ inline DamageResult calculate_damage(const DamageParams& params) {
     damage = apply_random_variance(damage, params.skip_random);
     damage = apply_stab(damage, params.move_type, params.attacker_type1, params.attacker_type2);
 
-    result.effectiveness = get_type_effectiveness(
-        params.move_type, params.defender_type1, params.defender_type2);
+    result.effectiveness =
+        get_type_effectiveness(params.move_type, params.defender_type1, params.defender_type2);
 
     damage = apply_type_effectiveness(damage, result.effectiveness);
     damage = enforce_minimum_damage(damage, result.effectiveness);

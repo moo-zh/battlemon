@@ -62,9 +62,9 @@ class Pipeline {
      * - Stage must have reached Cmd::input_stage
      */
     template <meta::Command Cmd>
-    requires meta::ValidAccess<Allowed, Cmd::domains>&&
-        meta::StageReached<Stage, typename Cmd::input_stage> [[nodiscard]] constexpr auto
-        run() -> Pipeline<typename Cmd::output_stage, Allowed> {
+        requires meta::ValidAccess<Allowed, Cmd::domains> &&
+                 meta::StageReached<Stage, typename Cmd::input_stage>
+    [[nodiscard]] constexpr auto run() -> Pipeline<typename Cmd::output_stage, Allowed> {
         Cmd::execute(*ctx_);
         return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
     }
@@ -77,9 +77,10 @@ class Pipeline {
      * @return New pipeline at Cmd's output stage.
      */
     template <meta::Command Cmd, typename... Args>
-    requires meta::ValidAccess<Allowed, Cmd::domains>&&
-        meta::StageReached<Stage, typename Cmd::input_stage> [[nodiscard]] constexpr auto
-        run(Args&&... args) -> Pipeline<typename Cmd::output_stage, Allowed> {
+        requires meta::ValidAccess<Allowed, Cmd::domains> &&
+                 meta::StageReached<Stage, typename Cmd::input_stage>
+    [[nodiscard]] constexpr auto run(Args&&... args)
+        -> Pipeline<typename Cmd::output_stage, Allowed> {
         Cmd::execute(*ctx_, static_cast<Args&&>(args)...);
         return Pipeline<typename Cmd::output_stage, Allowed>{*ctx_};
     }
@@ -105,8 +106,8 @@ class Pipeline {
      * the same stage.
      */
     template <typename TargetStage>
-    requires meta::StageReached<TargetStage, Stage> [[nodiscard]] constexpr auto advance_to()
-        -> Pipeline<TargetStage, Allowed> {
+        requires meta::StageReached<TargetStage, Stage>
+    [[nodiscard]] constexpr auto advance_to() -> Pipeline<TargetStage, Allowed> {
         return Pipeline<TargetStage, Allowed>{*ctx_};
     }
 

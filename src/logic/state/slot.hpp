@@ -22,43 +22,42 @@ namespace logic::state {
 // Volatile status flags (bitset)
 // Note: Use 1ul to ensure 32-bit shifts (eZ80 has 24-bit int)
 namespace volatile_flags {
-    constexpr uint32_t CONFUSED       = 1ul << 0;
-    constexpr uint32_t INFATUATED     = 1ul << 1;
-    constexpr uint32_t FOCUS_ENERGY   = 1ul << 2;
-    constexpr uint32_t SUBSTITUTE     = 1ul << 3;
-    constexpr uint32_t LEECH_SEED     = 1ul << 4;
-    constexpr uint32_t CURSED         = 1ul << 5;
-    constexpr uint32_t NIGHTMARE      = 1ul << 6;
-    constexpr uint32_t TRAPPED        = 1ul << 7;
-    constexpr uint32_t WRAPPED        = 1ul << 8;
-    constexpr uint32_t TORMENTED      = 1ul << 9;
-    constexpr uint32_t DISABLED       = 1ul << 10;
-    constexpr uint32_t TAUNTED        = 1ul << 11;
-    constexpr uint32_t ENCORED        = 1ul << 12;
-    constexpr uint32_t CHARGING       = 1ul << 13;
-    constexpr uint32_t SEMI_INVULN    = 1ul << 14;
-    constexpr uint32_t DESTINY_BOND   = 1ul << 15;
-    constexpr uint32_t GRUDGE         = 1ul << 16;
-    constexpr uint32_t INGRAINED      = 1ul << 17;
-    constexpr uint32_t YAWN           = 1ul << 18;
-    constexpr uint32_t PERISH_SONG    = 1ul << 19;
-    constexpr uint32_t LOCK_ON        = 1ul << 20;
-    constexpr uint32_t CHARGED        = 1ul << 21;
-    constexpr uint32_t DEFENSE_CURL   = 1ul << 22;
-    constexpr uint32_t RAGE           = 1ul << 23;
-    constexpr uint32_t FORESIGHT      = 1ul << 24;
-    constexpr uint32_t BIDE           = 1ul << 25;
-    constexpr uint32_t UPROAR         = 1ul << 26;
-    constexpr uint32_t TRANSFORMED    = 1ul << 27;
-    constexpr uint32_t PROTECTED      = 1ul << 28;
-    constexpr uint32_t ENDURED        = 1ul << 29;
-    constexpr uint32_t FLINCHED       = 1ul << 30;
+constexpr uint32_t CONFUSED = 1ul << 0;
+constexpr uint32_t INFATUATED = 1ul << 1;
+constexpr uint32_t FOCUS_ENERGY = 1ul << 2;
+constexpr uint32_t SUBSTITUTE = 1ul << 3;
+constexpr uint32_t LEECH_SEED = 1ul << 4;
+constexpr uint32_t CURSED = 1ul << 5;
+constexpr uint32_t NIGHTMARE = 1ul << 6;
+constexpr uint32_t TRAPPED = 1ul << 7;
+constexpr uint32_t WRAPPED = 1ul << 8;
+constexpr uint32_t TORMENTED = 1ul << 9;
+constexpr uint32_t DISABLED = 1ul << 10;
+constexpr uint32_t TAUNTED = 1ul << 11;
+constexpr uint32_t ENCORED = 1ul << 12;
+constexpr uint32_t CHARGING = 1ul << 13;
+constexpr uint32_t SEMI_INVULN = 1ul << 14;
+constexpr uint32_t DESTINY_BOND = 1ul << 15;
+constexpr uint32_t GRUDGE = 1ul << 16;
+constexpr uint32_t INGRAINED = 1ul << 17;
+constexpr uint32_t YAWN = 1ul << 18;
+constexpr uint32_t PERISH_SONG = 1ul << 19;
+constexpr uint32_t LOCK_ON = 1ul << 20;
+constexpr uint32_t CHARGED = 1ul << 21;
+constexpr uint32_t DEFENSE_CURL = 1ul << 22;
+constexpr uint32_t RAGE = 1ul << 23;
+constexpr uint32_t FORESIGHT = 1ul << 24;
+constexpr uint32_t BIDE = 1ul << 25;
+constexpr uint32_t UPROAR = 1ul << 26;
+constexpr uint32_t TRANSFORMED = 1ul << 27;
+constexpr uint32_t PROTECTED = 1ul << 28;
+constexpr uint32_t ENDURED = 1ul << 29;
+constexpr uint32_t FLINCHED = 1ul << 30;
 
-    // Flags transferred by Baton Pass
-    constexpr uint32_t BATON_PASS_MASK =
-        CONFUSED | FOCUS_ENERGY | SUBSTITUTE | LEECH_SEED |
-        CURSED | TRAPPED | INGRAINED | PERISH_SONG | LOCK_ON;
-}
+// Flags transferred by Baton Pass
+constexpr uint32_t BATON_PASS_MASK = CONFUSED | FOCUS_ENERGY | SUBSTITUTE | LEECH_SEED | CURSED |
+                                     TRAPPED | INGRAINED | PERISH_SONG | LOCK_ON;
+}  // namespace volatile_flags
 
 struct SlotState {
     // Stat stages (-6 to +6, stored as 0-12 with 6 = neutral)
@@ -116,22 +115,16 @@ struct SlotState {
     constexpr void clear(uint32_t flag) { volatiles &= ~flag; }
 
     // Get effective stat stage (-6 to +6)
-    constexpr int8_t effective_stage(int8_t raw) const {
-        return static_cast<int8_t>(raw - 6);
-    }
+    constexpr int8_t effective_stage(int8_t raw) const { return static_cast<int8_t>(raw - 6); }
 
     // Clear for switch-out (normal)
-    constexpr void clear_on_switch() {
-        *this = SlotState{};
-    }
+    constexpr void clear_on_switch() { *this = SlotState{}; }
 
     // Clear for switch-out (Baton Pass - preserve transferable state)
     constexpr void clear_for_baton_pass() {
         uint32_t preserved_volatiles = volatiles & volatile_flags::BATON_PASS_MASK;
-        int8_t preserved_stages[] = {
-            atk_stage, def_stage, spd_stage,
-            sp_atk_stage, sp_def_stage, accuracy_stage, evasion_stage
-        };
+        int8_t preserved_stages[] = {atk_stage,    def_stage,      spd_stage,    sp_atk_stage,
+                                     sp_def_stage, accuracy_stage, evasion_stage};
         uint16_t preserved_sub_hp = substitute_hp;
         uint8_t preserved_perish = perish_count;
         uint8_t preserved_leech = leech_seed_target;

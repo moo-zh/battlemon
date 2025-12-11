@@ -215,13 +215,16 @@ struct ApplyPerishSong : CommandMeta<Domain::Slot, Genesis, EffectApplied> {
             auto* slot = ctx.slots[i];
             auto* mon = ctx.mons[i];
 
-            if (!slot || !mon) continue;
+            if (!slot || !mon)
+                continue;
 
             // Skip fainted Pokemon
-            if (mon->is_fainted()) continue;
+            if (mon->is_fainted())
+                continue;
 
             // Skip if already affected by Perish Song
-            if (slot->has(logic::state::volatile_flags::PERISH_SONG)) continue;
+            if (slot->has(logic::state::volatile_flags::PERISH_SONG))
+                continue;
 
             // TODO: Check for Soundproof ability
 

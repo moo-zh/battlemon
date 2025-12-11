@@ -128,7 +128,8 @@ class Pipeline {
      * Asserts that the current stage has reached Cmd's input_stage.
      */
     template <meta::Command Cmd>
-    requires meta::ValidAccess<Allowed, Cmd::domains> Pipeline& run() {
+        requires meta::ValidAccess<Allowed, Cmd::domains>
+    Pipeline& run() {
         constexpr StageId required = stage_id<typename Cmd::input_stage>::value;
         constexpr StageId output = stage_id<typename Cmd::output_stage>::value;
         assert(stage_leq(required, stage_) && "Stage precondition violated (runtime)");
@@ -145,7 +146,8 @@ class Pipeline {
      * @return Reference to this pipeline for chaining.
      */
     template <meta::Command Cmd, typename... Args>
-    requires meta::ValidAccess<Allowed, Cmd::domains> Pipeline& run(Args&&... args) {
+        requires meta::ValidAccess<Allowed, Cmd::domains>
+    Pipeline& run(Args&&... args) {
         constexpr StageId required = stage_id<typename Cmd::input_stage>::value;
         constexpr StageId output = stage_id<typename Cmd::output_stage>::value;
         assert(stage_leq(required, stage_) && "Stage precondition violated (runtime)");

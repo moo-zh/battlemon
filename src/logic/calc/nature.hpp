@@ -1,10 +1,9 @@
 #pragma once
 
-#include "util/assert.hpp"
-
 #include "types/calc.hpp"
 #include "types/enums/nature.hpp"
 #include "types/enums/stats.hpp"
+#include "util/assert.hpp"
 
 namespace logic::calc {
 

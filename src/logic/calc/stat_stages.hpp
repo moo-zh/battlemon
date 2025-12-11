@@ -1,8 +1,7 @@
 #pragma once
 
-#include "util/assert.hpp"
-
 #include "types/calc.hpp"
+#include "util/assert.hpp"
 
 namespace logic::calc {
 

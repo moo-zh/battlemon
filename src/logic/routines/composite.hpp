@@ -28,20 +28,12 @@ using namespace logic::ops;
 
 namespace detail {
 // Attack sequence for turn 2
-using SkyAttackHit = Seq<
-    ClearCharge,
-    CheckAccuracy,
-    CalculateDamage,
-    ApplyDamage,
-    TryApplyFlinch,
-    CheckFaintAfterEffect
->;
+using SkyAttackHit = Seq<ClearCharge, CheckAccuracy, CalculateDamage, ApplyDamage, TryApplyFlinch,
+                         CheckFaintAfterEffect>;
 
 // Whole control flow as an action for macro-friendly usage
-using SkyAttackAction = Match<FaintChecked,
-    Branch<when::NotCharging, Do<BeginCharge>>,
-    Otherwise<SkyAttackHit>
->;
+using SkyAttackAction =
+    Match<FaintChecked, Branch<when::NotCharging, Do<BeginCharge>>, Otherwise<SkyAttackHit>>;
 }  // namespace detail
 
 EFFECT(SkyAttack, Pure) {

@@ -14,8 +14,8 @@
 //   composite.hpp - Complex multi-mechanic effects (Sky Attack, etc.)
 // ============================================================================
 
+#include "composite.hpp"
+#include "field.hpp"
 #include "hit.hpp"
 #include "stat.hpp"
 #include "status.hpp"
-#include "field.hpp"
-#include "composite.hpp"

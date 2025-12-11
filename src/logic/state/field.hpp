@@ -27,15 +27,15 @@ enum class Weather : uint8_t {
 };
 
 struct FutureSight {
-    uint8_t counter[4];       // Turns until attack lands (0 = inactive)
-    uint8_t attacker[4];      // Slot that used it
-    uint16_t damage[4];       // Pre-calculated damage
-    uint8_t move[4];          // Move ID (FUTURE_SIGHT or DOOM_DESIRE)
+    uint8_t counter[4];   // Turns until attack lands (0 = inactive)
+    uint8_t attacker[4];  // Slot that used it
+    uint16_t damage[4];   // Pre-calculated damage
+    uint8_t move[4];      // Move ID (FUTURE_SIGHT or DOOM_DESIRE)
 };
 
 struct Wish {
-    uint8_t counter[4];       // Turns until heal (0 = inactive)
-    uint8_t hp_to_restore[4]; // HP amount to restore
+    uint8_t counter[4];        // Turns until heal (0 = inactive)
+    uint8_t hp_to_restore[4];  // HP amount to restore
 };
 
 struct FieldState {

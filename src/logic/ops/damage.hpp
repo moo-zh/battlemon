@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base.hpp"
 #include "../calc/damage.hpp"
+#include "base.hpp"
 
 namespace logic::ops {
 
@@ -65,27 +65,23 @@ struct CalculateDamage
 
         // Attack/defense based on physical vs special
         if (is_physical) {
-            params.attack = ctx.override.attack > 0
-                ? ctx.override.attack : attacker.attack;
-            params.defense = ctx.override.defense > 0
-                ? ctx.override.defense : defender.defense;
+            params.attack = ctx.override.attack > 0 ? ctx.override.attack : attacker.attack;
+            params.defense = ctx.override.defense > 0 ? ctx.override.defense : defender.defense;
             params.attack_stage = ctx.attacker_slot
-                ? static_cast<uint8_t>(ctx.attacker_slot->atk_stage)
-                : calc::DEFAULT_STAT_STAGE;
+                                      ? static_cast<uint8_t>(ctx.attacker_slot->atk_stage)
+                                      : calc::DEFAULT_STAT_STAGE;
             params.defense_stage = ctx.defender_slot
-                ? static_cast<uint8_t>(ctx.defender_slot->def_stage)
-                : calc::DEFAULT_STAT_STAGE;
+                                       ? static_cast<uint8_t>(ctx.defender_slot->def_stage)
+                                       : calc::DEFAULT_STAT_STAGE;
         } else {
-            params.attack = ctx.override.attack > 0
-                ? ctx.override.attack : attacker.sp_attack;
-            params.defense = ctx.override.defense > 0
-                ? ctx.override.defense : defender.sp_defense;
+            params.attack = ctx.override.attack > 0 ? ctx.override.attack : attacker.sp_attack;
+            params.defense = ctx.override.defense > 0 ? ctx.override.defense : defender.sp_defense;
             params.attack_stage = ctx.attacker_slot
-                ? static_cast<uint8_t>(ctx.attacker_slot->sp_atk_stage)
-                : calc::DEFAULT_STAT_STAGE;
+                                      ? static_cast<uint8_t>(ctx.attacker_slot->sp_atk_stage)
+                                      : calc::DEFAULT_STAT_STAGE;
             params.defense_stage = ctx.defender_slot
-                ? static_cast<uint8_t>(ctx.defender_slot->sp_def_stage)
-                : calc::DEFAULT_STAT_STAGE;
+                                       ? static_cast<uint8_t>(ctx.defender_slot->sp_def_stage)
+                                       : calc::DEFAULT_STAT_STAGE;
         }
 
         // Types for STAB and effectiveness
@@ -162,8 +158,8 @@ struct DrainHP : CommandMeta<Domain::Mon, DamageApplied, EffectApplied> {
         }
 
         // If a substitute is still up, no HP is restored (Gen III behavior)
-        if (ctx.defender_has_substitute() &&
-            ctx.defender_slot && ctx.defender_slot->substitute_hp > 0) {
+        if (ctx.defender_has_substitute() && ctx.defender_slot &&
+            ctx.defender_slot->substitute_hp > 0) {
             return;
         }
 
@@ -200,8 +196,8 @@ struct Recoil : CommandMeta<Domain::Mon, DamageApplied, EffectApplied> {
     }
 };
 
-using RecoilQuarter = Recoil<25>;    // e.g., Take Down
-using RecoilThird   = Recoil<33>;    // e.g., Double-Edge (approx)
+using RecoilQuarter = Recoil<25>;  // e.g., Take Down
+using RecoilThird = Recoil<33>;    // e.g., Double-Edge (approx)
 
 // ============================================================================
 //                           FIXED DAMAGE SETTER
@@ -213,7 +209,8 @@ using RecoilThird   = Recoil<33>;    // e.g., Double-Edge (approx)
 // ============================================================================
 
 template <uint16_t Amount>
-struct SetFixedDamage : CommandMeta<Domain::Slot | Domain::Mon, AccuracyResolved, DamageCalculated> {
+struct SetFixedDamage
+    : CommandMeta<Domain::Slot | Domain::Mon, AccuracyResolved, DamageCalculated> {
     static void execute(dsl::BattleContext& ctx) {
         if (ctx.result.missed) {
             ctx.result.damage = 0;
@@ -235,9 +232,11 @@ struct SetFixedDamage : CommandMeta<Domain::Slot | Domain::Mon, AccuracyResolved
 template <uint8_t Percent>
 struct HealUser : CommandMeta<Domain::Mon, Genesis, EffectApplied> {
     static void execute(dsl::BattleContext& ctx) {
-        if (!ctx.attacker_mon) return;
+        if (!ctx.attacker_mon)
+            return;
         uint32_t heal = static_cast<uint32_t>(ctx.attacker_mon->max_hp) * Percent / 100u;
-        if (heal == 0 && Percent > 0) heal = 1;
+        if (heal == 0 && Percent > 0)
+            heal = 1;
         ctx.attacker_mon->heal(static_cast<uint16_t>(heal));
     }
 };

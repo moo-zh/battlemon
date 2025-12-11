@@ -2,9 +2,8 @@
 
 #include <cassert>
 
-#include "util/random.hpp"
-
 #include "types/calc.hpp"
+#include "util/random.hpp"
 
 namespace logic::calc {
 
@@ -49,16 +48,20 @@ constexpr uint8_t CRIT_MULTIPLIER = 2;
  *
  * @return Critical hit stage (0-4, clamped)
  */
-constexpr CritStage calc_crit_stage(bool focus_energy, bool high_crit_move,
-                                     bool scope_lens, CritStage species_bonus = 0) {
+constexpr CritStage calc_crit_stage(bool focus_energy, bool high_crit_move, bool scope_lens,
+                                    CritStage species_bonus = 0) {
     CritStage stage = 0;
 
-    if (focus_energy) stage += 2;
-    if (high_crit_move) stage += 1;
-    if (scope_lens) stage += 1;
+    if (focus_energy)
+        stage += 2;
+    if (high_crit_move)
+        stage += 1;
+    if (scope_lens)
+        stage += 1;
     stage += species_bonus;
 
-    if (stage > MAX_CRIT_STAGE) stage = MAX_CRIT_STAGE;
+    if (stage > MAX_CRIT_STAGE)
+        stage = MAX_CRIT_STAGE;
     return stage;
 }
 

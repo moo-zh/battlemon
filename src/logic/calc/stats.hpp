@@ -1,12 +1,11 @@
 #pragma once
 
-#include "util/assert.hpp"
-
 #include "nature.hpp"
 #include "types/calc.hpp"
 #include "types/enums/nature.hpp"
 #include "types/enums/species.hpp"
 #include "types/enums/stats.hpp"
+#include "util/assert.hpp"
 
 namespace logic::calc {
 
@@ -99,8 +98,8 @@ constexpr StatValue calc_hp(BaseStat base, IV iv, EV ev, Level level) {
  *
  * @return Calculated stat value
  */
-constexpr StatValue calc_stat(BaseStat base, IV iv, EV ev, Level level,
-                               types::enums::Nature nature, uint8_t stat_idx) {
+constexpr StatValue calc_stat(BaseStat base, IV iv, EV ev, Level level, types::enums::Nature nature,
+                              uint8_t stat_idx) {
     CONSTEXPR_ASSERT(level > 0);
     CONSTEXPR_ASSERT(stat_idx < NUM_NATURE_STATS);
 
@@ -179,9 +178,8 @@ struct EVSpread {
  *
  * @return Complete calculated stat block
  */
-constexpr StatBlock calc_stats(const BaseStats& base, const IVSpread& ivs,
-                               const EVSpread& evs, Level level,
-                               types::enums::Nature nature, bool is_shedinja = false) {
+constexpr StatBlock calc_stats(const BaseStats& base, const IVSpread& ivs, const EVSpread& evs,
+                               Level level, types::enums::Nature nature, bool is_shedinja = false) {
     StatBlock result{};
 
     // HP (special case for Shedinja)
@@ -194,8 +192,10 @@ constexpr StatBlock calc_stats(const BaseStats& base, const IVSpread& ivs,
     // Other stats with nature modifiers
     result.attack = calc_stat(base.atk(), ivs.atk, evs.atk, level, nature, stat_index::ATK);
     result.defense = calc_stat(base.def(), ivs.def, evs.def, level, nature, stat_index::DEF);
-    result.sp_attack = calc_stat(base.sp_atk(), ivs.sp_atk, evs.sp_atk, level, nature, stat_index::SP_ATK);
-    result.sp_defense = calc_stat(base.sp_def(), ivs.sp_def, evs.sp_def, level, nature, stat_index::SP_DEF);
+    result.sp_attack =
+        calc_stat(base.sp_atk(), ivs.sp_atk, evs.sp_atk, level, nature, stat_index::SP_ATK);
+    result.sp_defense =
+        calc_stat(base.sp_def(), ivs.sp_def, evs.sp_def, level, nature, stat_index::SP_DEF);
     result.speed = calc_stat(base.spd(), ivs.spd, evs.spd, level, nature, stat_index::SPD);
 
     return result;
