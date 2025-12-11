@@ -1,10 +1,10 @@
 ---
 # BattleMon - clang-format configuration
-# C++20 project using modern formatting conventions
+# C++23 project using modern formatting conventions
 
 BasedOnStyle: Google
 Language: Cpp
-Standard: c++17
+Standard: Latest
 
 # Indentation
 IndentWidth: 4

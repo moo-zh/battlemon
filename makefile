@@ -8,7 +8,7 @@ ICON = icon.png
 DESCRIPTION = "Pokemon Battle Factory"
 
 CFLAGS = -Wall -Wextra -Oz -std=c17
-CXXFLAGS = -Wall -Wextra -Oz -std=c++20
+CXXFLAGS = -Wall -Wextra -Oz -std=c++2b
 
 SRCDIR = src/
 BINDIR = bin/
